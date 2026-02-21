@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
@@ -12,6 +11,13 @@ import { jwtConfig } from './config/jwt.config';
     ConfigModule.forRoot({
       load: [appConfig, jwtConfig],
       isGlobal: true,
+    }),
+    JwtModule.register({
+      global: true,
+      secret: process.env.JWT_SECRET || 'jwt-secret',
+      signOptions: {
+        expiresIn: Number(process.env.JWT_ACCESS_TOKEN_EXPIRES_IN) || 3600,
+      },
     }),
     UsersModule,
     AuthModule,
