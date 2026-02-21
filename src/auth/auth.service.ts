@@ -6,12 +6,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { UsersService } from '../users/users.service';
-
-type PublicUser = {
-  id: number;
-  name: string;
-  email: string;
-};
+import { JwtPayload, PublicUser } from './auth.types';
 
 @Injectable()
 export class AuthService {
@@ -21,7 +16,7 @@ export class AuthService {
   ) {}
 
   private async getTokens(user: PublicUser) {
-    const payload = {
+    const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
       role: 'USER',
