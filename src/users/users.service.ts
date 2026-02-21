@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { PublicUser } from '../auth/auth.types';
 
 type UserRecord = {
   id: number;
@@ -10,12 +9,6 @@ type UserRecord = {
   password: string;
 };
 
-type UserRecord = {
-  id: number;
-  name: string;
-  email: string;
-  password: string;
-};
 
 type PublicUser = {
   id: number;
