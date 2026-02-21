@@ -1,12 +1,4 @@
-import {
-  ConflictException,
-  Injectable,
-} from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UsersService } from '../users/users.service';
-import { JwtPayload, PublicUser } from './auth.types';
+
 
 @Injectable()
 export class AuthService {
@@ -16,7 +8,7 @@ export class AuthService {
   ) {}
 
   private async getTokens(user: PublicUser) {
-    const payload: JwtPayload = {
+    const payload = {
       sub: user.id,
       email: user.email,
       role: 'USER',
@@ -56,6 +48,31 @@ export class AuthService {
     });
 
     const userData: PublicUser = this.toPublicUser(user);
+    const tokens = await this.getTokens(userData);
+
+    return {
+      user: userData,
+      tokens,
+    };
+  }
+
+  async login(loginAuthDto: LoginAuthDto) {
+    const user = this.usersService.findByEmail(loginAuthDto.email);
+
+    if (!user) {
+      throw new UnauthorizedException('Неверный email или пароль');
+    }
+
+    const isPasswordValid = await bcrypt.compare(
+      loginAuthDto.password,
+      user.password,
+    );
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Неверный email или пароль');
+    }
+
+    const userData = this.toPublicUser(user);
     const tokens = await this.getTokens(userData);
 
     return {

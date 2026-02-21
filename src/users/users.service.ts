@@ -10,6 +10,19 @@ type UserRecord = {
   password: string;
 };
 
+type UserRecord = {
+  id: number;
+  name: string;
+  email: string;
+  password: string;
+};
+
+type PublicUser = {
+  id: number;
+  name: string;
+  email: string;
+};
+
 @Injectable()
 export class UsersService {
   private users: UserRecord[] = [];
