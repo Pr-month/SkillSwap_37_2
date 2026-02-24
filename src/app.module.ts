@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
+import { ConfigModule } from '@nestjs/config';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
@@ -11,9 +12,11 @@ import { ConfigModule } from '@nestjs/config';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      load: [appConfig, jwtConfig],
       isGlobal: true,
+      load: [],
+      load: [appConfig, jwtConfig],
     }),
+    
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET || 'jwt-secret',
