@@ -4,10 +4,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-export enum UserRole {
-  USER = 'USER',
-  ADMIN = 'ADMIN',
-}
+import { UserRole, UserGender } from './user.enums';
 
 @Entity('users')
 export class User {
@@ -32,8 +29,11 @@ export class User {
   @Column()
   city: string;
 
-  @Column()
-  gender: string;
+  @Column({
+    type: 'enum',
+    enum: UserGender,
+  })
+  gender: UserGender;
 
   @Column()
   avatar: string;
