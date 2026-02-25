@@ -1,10 +1,10 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-import { Gender, UserRole } from '../users.enums';
+import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
+import { UserGender, UserRole } from "../users.enums";
 
 @Entity('users')
 export class User {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
   @Column()
   name: string;
@@ -15,23 +15,22 @@ export class User {
   @Column()
   password: string;
 
-  @Column({ nullable: true })
+  @Column()
   about: string;
 
-  @Column({ type: 'date', nullable: true })
+  @Column({ type: 'date' })
   birthdate: Date;
 
-  @Column({ nullable: true })
+  @Column()
   city: string;
 
   @Column({
     type: 'enum',
-    enum: Gender,
-    nullable: true,
+    enum: UserGender,
   })
-  gender: Gender;
+  gender: UserGender;
 
-  @Column({ nullable: true })
+  @Column()
   avatar: string;
 
   @Column({
@@ -41,6 +40,6 @@ export class User {
   })
   role: UserRole;
 
-  @Column({ type: 'varchar', nullable: true })
-  refreshToken: string | null;
+  @Column()
+  refreshToken: string;
 }
