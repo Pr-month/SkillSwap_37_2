@@ -13,6 +13,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
+import { TAuthRequest } from '../auth/auth.types';
 
 @Controller('users')
 export class UsersController {
@@ -25,8 +26,8 @@ export class UsersController {
 
   @UseGuards(JwtAccessGuard)
   @Get('me')
-  getMe(@Request() req: { user: { id: number } }) {
-    return this.usersService.findOne(req.user.id);
+  getMe(@Request() req: TAuthRequest) {
+    return this.usersService.findOne(req.user.sub);
   }
 
   @Get()
