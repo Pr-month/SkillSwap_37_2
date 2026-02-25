@@ -1,7 +1,6 @@
 import { ConflictException, Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import { UsersService } from "src/users/users.service";
-import { PublicUser } from "./auth.types";
+import { UsersService } from "../users/users.service";
 import { CreateAuthDto } from "./dto/create-auth.dto";
 import { LoginAuthDto } from "./dto/login-auth.dto";
 import * as bcrypt from 'bcrypt';
@@ -13,7 +12,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  private async getTokens(user: PublicUser) {
+  private async getTokens(user: { id: number; email: string }) {
     const payload = {
       sub: user.id,
       email: user.email,
@@ -53,7 +52,7 @@ export class AuthService {
       password: hashedPassword,
     });
 
-    const userData: PublicUser = this.toPublicUser(user);
+    const userData = this.toPublicUser(user);
     const tokens = await this.getTokens(userData);
 
     return {

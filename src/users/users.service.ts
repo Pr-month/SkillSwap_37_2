@@ -9,20 +9,13 @@ type UserRecord = {
   password: string;
 };
 
-
-type PublicUser = {
-  id: number;
-  name: string;
-  email: string;
-};
-
 @Injectable()
 export class UsersService {
   private users: UserRecord[] = [];
 
   private nextUserId = 1;
 
-  private toPublicUser(user: UserRecord): PublicUser {
+  private toPublicUser(user: UserRecord) {
     return {
       id: user.id,
       name: user.name,
