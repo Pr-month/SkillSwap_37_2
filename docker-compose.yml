@@ -14,7 +14,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - db:/var/lib/postgresql/data
       # - ./db-init:/docker-entrypoint-initdb.d
     networks:
       - internal
@@ -26,6 +26,6 @@ volumes:
   # public:
   db:
 
-  networks:
-    internal:
-      driver: bridge
+networks:
+  internal:
+    driver: bridge
