@@ -14,7 +14,7 @@ import { JwtModule } from '@nestjs/jwt';
       isGlobal: true,
       load: [appConfig, jwtConfig],
     }),
-    
+
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET || 'jwt-secret',
