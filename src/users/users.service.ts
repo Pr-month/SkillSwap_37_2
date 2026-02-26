@@ -1,21 +1,19 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-
-type UserRecord = {
-  id: number;
-  name: string;
-  email: string;
-  password: string;
-};
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
-  private users: UserRecord[] = [];
 
-  private nextUserId = 1;
+  constructor(
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
+  ) {}
 
-  private toPublicUser(user: UserRecord) {
+  private toPublicUser(user: User) {
     return {
       id: user.id,
       name: user.name,
@@ -23,18 +21,18 @@ export class UsersService {
     };
   }
 
-  create(createUserDto: CreateUserDto) {
-    const user = this.createFromAuth(createUserDto);
-
-    return this.toPublicUser(user);
+  async create(createUserDto: CreateUserDto) {
+    const user = this.usersRepository.create(createUserDto);
+    const saved = await this.usersRepository.save(user);
+    return this.toPublicUser(saved);
   }
 
-  findAll() {
-    return this.users.map((user) => this.toPublicUser(user));
+  async findAll() {
+    return await this.usersRepository.find();
   }
 
-  findOne(id: number) {
-    const user = this.users.find((item) => item.id === id);
+  async findOne(id: number) {
+    const user = await this.usersRepository.findOneBy({ id });
 
     if (!user) {
       return null;
@@ -43,47 +41,38 @@ export class UsersService {
     return this.toPublicUser(user);
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    const userIndex = this.users.findIndex((item) => item.id === id);
+  async update(id: number, updateUserDto: UpdateUserDto) {
+    const user = await this.usersRepository.findOneBy({ id });
 
-    if (userIndex === -1) {
+    if (!user) {
       return null;
     }
 
-    this.users[userIndex] = {
-      ...this.users[userIndex],
-      ...updateUserDto,
-    };
+    Object.assign(user, updateUserDto);
+    const saved = await this.usersRepository.save(user);
 
-    return this.toPublicUser(this.users[userIndex]);
+    return this.toPublicUser(saved);
   }
 
-  remove(id: number) {
-    const userIndex = this.users.findIndex((item) => item.id === id);
+  async remove(id: number) {
+    const user = await this.usersRepository.findOneBy({ id });
 
-    if (userIndex === -1) {
+    if (!user) {
       return null;
     }
 
-    const [removedUser] = this.users.splice(userIndex, 1);
-    return this.toPublicUser(removedUser);
+    await this.usersRepository.remove(user);
+
+    return this.toPublicUser(user);
   }
 
-  findByEmail(email: string) {
-    return this.users.find((user) => user.email === email);
+  async findByEmail(email: string) {
+    return await this.usersRepository.findOneBy({ email });
   }
 
-  createFromAuth(createUserDto: CreateUserDto): UserRecord {
-    const user: UserRecord = {
-      id: this.nextUserId,
-      name: createUserDto.name,
-      email: createUserDto.email,
-      password: createUserDto.password,
-    };
+  async createFromAuth(createUserDto: CreateUserDto): Promise<User> {
+    const user = this.usersRepository.create(createUserDto);
 
-    this.users.push(user);
-    this.nextUserId += 1;
-
-    return user;
+    return this.usersRepository.save(user);
   }
 }
