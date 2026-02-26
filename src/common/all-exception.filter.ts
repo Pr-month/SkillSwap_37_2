@@ -1,0 +1,48 @@
+import {
+  ArgumentsHost,
+  Catch,
+  ExceptionFilter,
+  PayloadTooLargeException,
+} from '@nestjs/common';
+import { Response } from 'express';
+import { EntityNotFoundError, QueryFailedError } from 'typeorm';
+import { UPLOAD_ERROR } from '../files/files.errors';
+@Catch()
+export class AppExceptionFilter implements ExceptionFilter {
+  catch(exception: unknown, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse<Response>();
+    let status = 500;
+    let message = 'Internal Server Error';
+
+    if (exception instanceof EntityNotFoundError) {
+      status = 404;
+      message = 'Cущность не найдена';
+    }
+
+    if (exception instanceof PayloadTooLargeException) {
+      status = 413;
+      message = UPLOAD_ERROR.TOO_BIG;
+    }
+
+    if (
+      exception instanceof QueryFailedError &&
+      exception.driverError?.code === '23505'
+    ) {
+      const driverError = (exception as unknown as QueryFailedError)
+        .driverError as {
+        detail?: string;
+        table?: string;
+      };
+
+      status = 409;
+      message = `Запись уже существует в таблице ${driverError.table}`;
+    }
+
+    response.status(status).json({
+      errorCode: status,
+      message,
+      status,
+    });
+  }
+}
