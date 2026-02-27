@@ -10,6 +10,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { dbConfig } from './config/db.config';
 import { SkillsModule } from './skills/skills.module';
+import { FilesController } from './files/files.controller';
 
 @Module({
   imports: [
@@ -35,7 +36,7 @@ import { SkillsModule } from './skills/skills.module';
     AuthModule,
     SkillsModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, FilesController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
