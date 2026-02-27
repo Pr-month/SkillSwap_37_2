@@ -75,4 +75,8 @@ export class UsersService {
 
     return this.usersRepository.save(user);
   }
+
+  async clearRefreshToken(userId: number): Promise<void> {
+    await this.usersRepository.update(userId, { refreshToken: '' as string });
+  }
 }
