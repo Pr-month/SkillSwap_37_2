@@ -41,7 +41,7 @@ export class User {
     })
     role: UserRole;
 
-    @Column()
+    @Column({ nullable: true })
     refreshToken: string;
 
     @OneToMany(() => Skill, (skill) => skill.owner)
