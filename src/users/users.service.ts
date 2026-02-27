@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -6,6 +6,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { User } from './entities/user.entity';
+import { appConfig, IConfig } from '../config/app.config';
 
 @Injectable()
 export class UsersService {
@@ -13,6 +14,8 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    @Inject(appConfig.KEY)
+    private readonly config: IConfig,
   ) {}
 
   private toPublicUser(user: User) {
@@ -60,7 +63,7 @@ export class UsersService {
     const user = await this.usersRepository.findOneBy({ id });
 
     if (!user) {
-      return null;
+      throw new NotFoundException('Пользователь не найден');
     }
 
     const isPasswordValid = await bcrypt.compare(
@@ -72,7 +75,7 @@ export class UsersService {
       throw new BadRequestException('Неверный старый пароль');
     }
 
-    user.password = await bcrypt.hash(changePasswordDto.newPassword, 10);
+    user.password = await bcrypt.hash(changePasswordDto.newPassword, this.config.hashSalt);
     await this.usersRepository.save(user);
 
     return this.toPublicUser(user);

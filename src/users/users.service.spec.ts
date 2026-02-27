@@ -1,12 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
+import { appConfig } from '../config/app.config';
 import * as bcrypt from 'bcrypt';
 
 describe('UsersService', () => {
   let service: UsersService;
+
+  const mockConfig = {
+    hashSalt: 10,
+  };
 
   const mockRepository = {
     create: jest.fn(),
@@ -23,6 +28,10 @@ describe('UsersService', () => {
         {
           provide: getRepositoryToken(User),
           useValue: mockRepository,
+        },
+        {
+          provide: appConfig.KEY,
+          useValue: mockConfig,
         },
       ],
     }).compile();
@@ -49,7 +58,7 @@ describe('UsersService', () => {
       });
 
       expect(bcrypt.compare).toHaveBeenCalledWith('oldPass', 'oldHash');
-      expect(bcrypt.hash).toHaveBeenCalledWith('newPass123', 10);
+      expect(bcrypt.hash).toHaveBeenCalledWith('newPass123', mockConfig.hashSalt);
       expect(mockRepository.save).toHaveBeenCalled();
       expect(result).toEqual({ id: 1, name: 'Test', email: 'test@test.com' });
     });
@@ -67,15 +76,15 @@ describe('UsersService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('should return null when user not found', async () => {
+    it('should throw NotFoundException when user not found', async () => {
       mockRepository.findOneBy.mockResolvedValue(null);
 
-      const result = await service.changePassword(999, {
-        oldPassword: 'oldPass',
-        newPassword: 'newPass123',
-      });
-
-      expect(result).toBeNull();
+      await expect(
+        service.changePassword(999, {
+          oldPassword: 'oldPass',
+          newPassword: 'newPass123',
+        }),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });
