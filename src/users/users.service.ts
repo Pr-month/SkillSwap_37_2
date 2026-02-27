@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { User } from './entities/user.entity';
 
@@ -39,19 +38,6 @@ export class UsersService {
     }
 
     return this.toPublicUser(user);
-  }
-
-  async update(id: number, updateUserDto: UpdateUserDto) {
-    const user = await this.usersRepository.findOneBy({ id });
-
-    if (!user) {
-      return null;
-    }
-
-    Object.assign(user, updateUserDto);
-    const saved = await this.usersRepository.save(user);
-
-    return this.toPublicUser(saved);
   }
 
   async updateProfile(id: number, updateUserProfileDto: UpdateUserProfileDto) {

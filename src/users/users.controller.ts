@@ -11,7 +11,6 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
 import { TAuthRequest } from '../auth/auth.types';
@@ -51,8 +50,8 @@ export class UsersController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  update(@Param('id') id: string, @Body() updateUserProfileDto: UpdateUserProfileDto) {
+    return this.usersService.updateProfile(+id, updateUserProfileDto);
   }
 
   @Delete(':id')
