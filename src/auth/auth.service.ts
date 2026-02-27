@@ -95,4 +95,9 @@ export class AuthService {
     return { tokens };
   }
 
+  async logout(userId: number) {
+    await this.usersService.clearRefreshToken(userId);
+    return { message: 'Вы успешно вышли из системы', userId };
+  }
+
 }
