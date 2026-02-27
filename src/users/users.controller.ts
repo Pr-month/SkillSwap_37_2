@@ -12,6 +12,7 @@ import {
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
 import { TAuthRequest } from '../auth/auth.types';
 
@@ -28,6 +29,15 @@ export class UsersController {
   @Get('me')
   getMe(@Request() req: TAuthRequest) {
     return this.usersService.findOne(req.user.sub);
+  }
+
+  @UseGuards(JwtAccessGuard)
+  @Patch('me')
+  updateMe(
+    @Request() req: TAuthRequest,
+    @Body() updateUserProfileDto: UpdateUserProfileDto,
+  ) {
+    return this.usersService.updateProfile(req.user.sub, updateUserProfileDto);
   }
 
   @Get()
