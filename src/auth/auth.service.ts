@@ -89,4 +89,10 @@ export class AuthService {
       tokens,
     };
   }
+
+  async refresh(user: { id: number; email: string; role: string }) {
+    const tokens = await this.getTokens(user);
+    return { tokens };
+  }
+
 }
