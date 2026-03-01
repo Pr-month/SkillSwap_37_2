@@ -1,13 +1,42 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+
+// import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { appConfig } from '../config/app.config';
-import * as bcrypt from 'bcrypt';
+// import * as bcrypt from 'bcrypt';
+import { UsersService } from './users.service';
+import { User } from './entities/user.entity';
+import { Repository } from 'typeorm';
+import { UserRole, UserGender } from './users.enums';
 
 describe('UsersService', () => {
   let service: UsersService;
+  let repository: Repository<User>;
+
+  const mockUser = {
+    id: 1,
+    name: 'Test User',
+    email: 'test@example.com',
+    password: 'hashedpassword',
+    about: 'About me',
+    city: 'City',
+    birthdate: new Date('2000-01-01'),
+    gender: UserGender.MALE,
+    avatar: 'avatar.png',
+    role: UserRole.USER,
+    refreshToken: null,
+    skills: [],
+    hashPassword: jest.fn(),
+  };
+
+  const mockRepository = {
+    create: jest.fn(),
+    save: jest.fn(),
+    find: jest.fn(),
+    findOneBy: jest.fn(),
+  };
 
   const mockConfig = {
     hashSalt: 10,
