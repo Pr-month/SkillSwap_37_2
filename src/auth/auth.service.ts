@@ -43,7 +43,7 @@ export class AuthService {
   }
 
   async register(createAuthDto: CreateAuthDto) {
-    const existingUser = this.usersService.findByEmail(createAuthDto.email);
+    const existingUser = await this.usersService.findByEmail(createAuthDto.email);
 
     if (existingUser) {
       throw new ConflictException('Пользователь с таким email уже существует');
@@ -51,7 +51,7 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(createAuthDto.password, 10);
 
-    const user = this.usersService.createFromAuth({
+    const user = await this.usersService.createFromAuth({
       ...createAuthDto,
       password: hashedPassword,
     });
@@ -66,7 +66,7 @@ export class AuthService {
   }
 
   async login(loginAuthDto: LoginAuthDto) {
-    const user = this.usersService.findByEmail(loginAuthDto.email);
+    const user = await this.usersService.findByEmail(loginAuthDto.email);
 
     if (!user) {
       throw new UnauthorizedException('Неверный email или пароль');
@@ -89,4 +89,15 @@ export class AuthService {
       tokens,
     };
   }
+
+  async refresh(user: { id: number; email: string; role: string }) {
+    const tokens = await this.getTokens(user);
+    return { tokens };
+  }
+
+  async logout(userId: number) {
+    await this.usersService.clearRefreshToken(userId);
+    return { message: 'Вы успешно вышли из системы', userId };
+  }
+
 }
