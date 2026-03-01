@@ -19,6 +19,7 @@ import { jwtConfig } from '../config/jwt.config';
         new JwtAccessStrategy(config),
       inject: [jwtConfig.KEY],
     },
+
     {
       provide: JwtRefreshStrategy,
       useFactory: (config: ConfigType<typeof jwtConfig>) =>
