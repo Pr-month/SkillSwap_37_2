@@ -1,5 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+
+// import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { UsersService } from './users.service';
+import { User } from './entities/user.entity';
+import { appConfig } from '../config/app.config';
+// import * as bcrypt from 'bcrypt';
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
@@ -32,6 +38,18 @@ describe('UsersService', () => {
     findOneBy: jest.fn(),
   };
 
+  const mockConfig = {
+    hashSalt: 10,
+  };
+
+  const mockRepository = {
+    create: jest.fn(),
+    save: jest.fn(),
+    find: jest.fn(),
+    findOneBy: jest.fn(),
+    remove: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -40,14 +58,14 @@ describe('UsersService', () => {
           provide: getRepositoryToken(User),
           useValue: mockRepository,
         },
+        {
+          provide: appConfig.KEY,
+          useValue: mockConfig,
+        },
       ],
     }).compile();
 
     service = module.get<UsersService>(UsersService);
-    repository = module.get<Repository<User>>(getRepositoryToken(User));
-  });
-
-  afterEach(() => {
     jest.clearAllMocks();
   });
 
@@ -55,41 +73,47 @@ describe('UsersService', () => {
     expect(service).toBeDefined();
   });
 
-  describe('updateProfile', () => {
-    it('should update user profile fields', async () => {
-      const updateDto = {
-        about: 'New about',
-        city: 'New City',
-      };
+  describe('changePassword', () => {
+    it('should change password when old password is correct', async () => {
+      const user = { id: 1, name: 'Test', email: 'test@test.com', password: 'oldHash' };
+      mockRepository.findOneBy.mockResolvedValue(user);
+      mockRepository.save.mockResolvedValue(user);
+      jest.spyOn(bcrypt, 'compare').mockImplementation(async () => true);
+      jest.spyOn(bcrypt, 'hash').mockImplementation(async () => 'newHash');
 
-      const updatedUser = { ...mockUser, ...updateDto };
-
-      mockRepository.findOneBy.mockResolvedValue(mockUser);
-      mockRepository.save.mockResolvedValue(updatedUser);
-
-      const result = await service.updateProfile(1, updateDto);
-
-      expect(mockRepository.findOneBy).toHaveBeenCalledWith({ id: 1 });
-      // Verify save is called with merged object or updated object
-      // Object.assign modifies mockUser in place!
-      expect(mockRepository.save).toHaveBeenCalledWith(
-        expect.objectContaining({
-          ...mockUser,
-          ...updateDto,
-        }),
-      );
-
-      expect(result).toEqual({
-        id: 1,
-        name: 'Test User',
-        email: 'test@example.com',
+      const result = await service.changePassword(1, {
+        oldPassword: 'oldPass',
+        newPassword: 'newPass123',
       });
+
+      expect(bcrypt.compare).toHaveBeenCalledWith('oldPass', 'oldHash');
+      expect(bcrypt.hash).toHaveBeenCalledWith('newPass123', mockConfig.hashSalt);
+      expect(mockRepository.save).toHaveBeenCalled();
+      expect(result).toEqual({ id: 1, name: 'Test', email: 'test@test.com' });
     });
 
-    it('should return null if user not found', async () => {
+    it('should throw BadRequestException when old password is wrong', async () => {
+      const user = { id: 1, name: 'Test', email: 'test@test.com', password: 'oldHash' };
+      mockRepository.findOneBy.mockResolvedValue(user);
+      jest.spyOn(bcrypt, 'compare').mockImplementation(async () => false);
+
+      await expect(
+        service.changePassword(1, {
+          oldPassword: 'wrongPass',
+          newPassword: 'newPass123',
+        }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw NotFoundException when user not found', async () => {
       mockRepository.findOneBy.mockResolvedValue(null);
-      const result = await service.updateProfile(999, {});
-      expect(result).toBeNull();
+
+      await expect(
+        service.changePassword(999, {
+          oldPassword: 'oldPass',
+          newPassword: 'newPass123',
+        }),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });

@@ -11,7 +11,8 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
 import { TAuthRequest } from '../auth/auth.types';
 
@@ -31,12 +32,12 @@ export class UsersController {
   }
 
   @UseGuards(JwtAccessGuard)
-  @Patch('me')
-  updateMe(
+  @Patch('me/password')
+  updatePassword(
     @Request() req: TAuthRequest,
-    @Body() updateUserProfileDto: UpdateUserProfileDto,
+    @Body() changePasswordDto: ChangePasswordDto,
   ) {
-    return this.usersService.updateProfile(req.user.sub, updateUserProfileDto);
+    return this.usersService.changePassword(req.user.sub, changePasswordDto);
   }
 
   @Get()
