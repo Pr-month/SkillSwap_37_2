@@ -5,11 +5,12 @@ import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { appConfig } from './config/app.config';
-import { jwtConfig } from './config/jwt.config';
+import { jwtConfig, IJwtConfig } from './config/jwt.config';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { dbConfig } from './config/db.config';
 import { SkillsModule } from './skills/skills.module';
+import { StringValue } from 'ms';
 import { FilesController } from './files/files.controller';
 
 @Module({
@@ -25,12 +26,16 @@ import { FilesController } from './files/files.controller';
       useFactory: (db: ConfigType<typeof dbConfig>) => db,
     }),
 
-    JwtModule.register({
+    JwtModule.registerAsync({
       global: true,
-      secret: process.env.JWT_SECRET || 'jwt-secret',
-      signOptions: {
-        expiresIn: Number(process.env.JWT_ACCESS_TOKEN_EXPIRES_IN) || 3600,
-      },
+      imports: [ConfigModule],
+      inject: [jwtConfig.KEY],
+      useFactory: (config: IJwtConfig) => ({
+        secret: config.secret,
+        signOptions: {
+          expiresIn: config.expiresIn as StringValue,
+        },
+      }),
     }),
     UsersModule,
     AuthModule,
