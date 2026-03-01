@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateSkillDto } from './dto/create-skill.dto';
@@ -25,11 +29,18 @@ export class SkillsService {
     return `This action returns a #${id} skill`;
   }
 
-  async update(id: number, updateSkillDto: UpdateSkillDto) {
-    const skill = await this.skillsRepository.findOneBy({ id });
+  async update(id: number, updateSkillDto: UpdateSkillDto, userId: number) {
+    const skill = await this.skillsRepository.findOne({
+      where: { id },
+      relations: ['owner'],
+    });
 
     if (!skill) {
       throw new NotFoundException(`Навык с id ${id} не найден`);
+    }
+
+    if (skill.owner.id !== userId) {
+      throw new ForbiddenException('Можно обновить только свой навык');
     }
 
     Object.assign(skill, updateSkillDto);
