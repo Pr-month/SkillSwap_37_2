@@ -16,6 +16,13 @@ export class SkillsService {
     return `This action returns a #${id} skill`;
   }
 
+  findOneForUser(id: number, userId: string) {
+    // return this.skillsRepository.findOne({
+    //   where: { id, userId },
+    // });
+    return `This action returns a #${id} skill`;
+  }
+
   update(id: number, updateSkillDto: UpdateSkillDto) {
     return `This action updates a #${id} skill`;
   }

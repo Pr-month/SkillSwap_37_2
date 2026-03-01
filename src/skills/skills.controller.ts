@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { SkillsService } from './skills.service';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
+import { JwtAccessGuard } from 'src/auth/guards/jwt-access.guard';
+import { OwnerGuard } from './guards/owner.guard';
 
 @Controller('skills')
 export class SkillsController {
@@ -28,7 +30,8 @@ export class SkillsController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  @UseGuards(JwtAccessGuard, OwnerGuard)
+  remove(@Param('id') id: string) {    
     return this.skillsService.remove(+id);
   }
 }
