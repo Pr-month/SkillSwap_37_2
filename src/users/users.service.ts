@@ -2,12 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
-
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
@@ -41,14 +40,14 @@ export class UsersService {
     return this.toPublicUser(user);
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto) {
+  async updateProfile(id: number, updateUserProfileDto: UpdateUserProfileDto) {
     const user = await this.usersRepository.findOneBy({ id });
 
     if (!user) {
       return null;
     }
 
-    Object.assign(user, updateUserDto);
+    Object.assign(user, updateUserProfileDto);
     const saved = await this.usersRepository.save(user);
 
     return this.toPublicUser(saved);
