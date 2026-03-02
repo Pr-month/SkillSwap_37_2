@@ -95,4 +95,15 @@ export class AuthService {
       tokens,
     };
   }
+
+  async refresh(user: { id: number; email: string; role: string }) {
+    const tokens = await this.getTokens(user);
+    return { tokens };
+  }
+
+  async logout(userId: number) {
+    await this.usersService.clearRefreshToken(userId);
+    return { message: 'Вы успешно вышли из системы', userId };
+  }
+
 }

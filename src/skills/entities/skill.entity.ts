@@ -1,20 +1,20 @@
-import {Column, Entity, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
-import {User} from "../../users/entities/user.entity";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { User } from '../../users/entities/user.entity';
 
 @Entity('skills')
 export class Skill {
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column({unique: true})
-    title: string;
+  @Column({ unique: true })
+  title: string;
 
-    @Column()
-    description: string;
+  @Column()
+  description: string;
 
-    // category;
-    // images;
+  // category;
+  // images;
 
-    @ManyToOne(() => User, (user) => user.skills)
-    owner: User;
+  @ManyToOne(() => User, (user) => user.skills)
+  owner: User;
 }

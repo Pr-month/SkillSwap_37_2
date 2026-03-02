@@ -11,6 +11,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { dbConfig } from './config/db.config';
 import { SkillsModule } from './skills/skills.module';
 import { StringValue } from 'ms';
+import { FilesController } from './files/files.controller';
 
 @Module({
   imports: [
@@ -41,7 +42,7 @@ import { StringValue } from 'ms';
     AuthModule,
     SkillsModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, FilesController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
