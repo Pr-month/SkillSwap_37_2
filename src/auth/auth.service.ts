@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -8,24 +9,29 @@ import { UsersService } from '../users/users.service';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { LoginAuthDto } from './dto/login-auth.dto';
 import * as bcrypt from 'bcrypt';
+import { ConfigType } from '@nestjs/config';
+import { jwtConfig } from '../config/jwt.config';
+import { StringValue } from 'ms';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    @Inject(jwtConfig.KEY)
+    private readonly config: ConfigType<typeof jwtConfig>,
   ) {}
 
-  private async getTokens(user: { id: number; email: string }) {
+  private async getTokens(user: { id: number; email: string; role: string }) {
     const payload = {
       sub: user.id,
       email: user.email,
-      role: 'USER',
+      role: user.role,
     };
 
     const accessToken = await this.jwtService.signAsync(payload);
     const refreshToken = await this.jwtService.signAsync(payload, {
-      expiresIn: Number(process.env.JWT_REFRESH_TOKEN_EXPIRES_IN) || 604800,
+      expiresIn: this.config.refreshExpiresIn as StringValue,
     });
 
     return {
@@ -34,16 +40,10 @@ export class AuthService {
     };
   }
 
-  private toPublicUser(user: { id: number; name: string; email: string }) {
-    return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-    };
-  }
-
   async register(createAuthDto: CreateAuthDto) {
-    const existingUser = await this.usersService.findByEmail(createAuthDto.email);
+    const existingUser = await this.usersService.findByEmail(
+      createAuthDto.email,
+    );
 
     if (existingUser) {
       throw new ConflictException('Пользователь с таким email уже существует');
@@ -56,7 +56,12 @@ export class AuthService {
       password: hashedPassword,
     });
 
-    const userData = this.toPublicUser(user);
+    const userData = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    };
     const tokens = await this.getTokens(userData);
 
     return {
@@ -81,7 +86,12 @@ export class AuthService {
       throw new UnauthorizedException('Неверный email или пароль');
     }
 
-    const userData = this.toPublicUser(user);
+    const userData = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    };
     const tokens = await this.getTokens(userData);
 
     return {
