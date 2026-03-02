@@ -106,4 +106,10 @@ export class UsersService {
   async clearRefreshToken(userId: number): Promise<void> {
     await this.usersRepository.update(userId, { refreshToken: '' as string });
   }
+
+  async updateRefreshToken(userId: number, refreshToken: string) {
+  await this.usersRepository.update(userId, {
+    refreshToken,
+  });
+}
 }

@@ -43,7 +43,9 @@ export class AuthService {
   }
 
   async register(createAuthDto: CreateAuthDto) {
-    const existingUser = await this.usersService.findByEmail(createAuthDto.email);
+    const existingUser = await this.usersService.findByEmail(
+      createAuthDto.email,
+    );
 
     if (existingUser) {
       throw new ConflictException('Пользователь с таким email уже существует');
@@ -58,6 +60,8 @@ export class AuthService {
 
     const userData = this.toPublicUser(user);
     const tokens = await this.getTokens(userData);
+
+    await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
 
     return {
       user: userData,
@@ -84,6 +88,8 @@ export class AuthService {
     const userData = this.toPublicUser(user);
     const tokens = await this.getTokens(userData);
 
+    await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
+
     return {
       user: userData,
       tokens,
@@ -99,5 +105,4 @@ export class AuthService {
     await this.usersService.clearRefreshToken(userId);
     return { message: 'Вы успешно вышли из системы', userId };
   }
-
 }
