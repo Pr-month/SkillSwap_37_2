@@ -7,6 +7,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { GetSkillsQueryDto } from './dto/get-skills-query.dto';
 import { Skill } from './entities/skill.entity';
 
@@ -17,9 +19,9 @@ export class SkillsService {
     private readonly skillsRepository: Repository<Skill>,
   ) {}
 
-  create(createSkillDto: CreateSkillDto) {
-    void createSkillDto;
-    return 'This action adds a new skill';
+  async create(createSkillDto: CreateSkillDto) {
+    const skill = this.skillsRepository.create(createSkillDto);
+    return await this.skillsRepository.save(skill);
   }
 
   async findAll(query: GetSkillsQueryDto) {
