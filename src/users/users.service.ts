@@ -1,40 +1,44 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-
-type UserRecord = {
-  id: number;
-  name: string;
-  email: string;
-  password: string;
-};
+// import { UpdateUserDto } from './dto/update-user.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
+import { User } from './entities/user.entity';
+import { appConfig, IConfig } from '../config/app.config';
 
 @Injectable()
 export class UsersService {
-  private users: UserRecord[] = [];
+  constructor(
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
+    @Inject(appConfig.KEY)
+    private readonly config: IConfig,
+  ) {}
 
-  private nextUserId = 1;
-
-  private toPublicUser(user: UserRecord) {
+  private toPublicUser(user: User) {
     return {
       id: user.id,
       name: user.name,
       email: user.email,
+      role: user.role,
     };
   }
 
-  create(createUserDto: CreateUserDto) {
-    const user = this.createFromAuth(createUserDto);
-
-    return this.toPublicUser(user);
+  async create(createUserDto: CreateUserDto) {
+    const user = this.usersRepository.create(createUserDto);
+    const saved = await this.usersRepository.save(user);
+    return this.toPublicUser(saved);
   }
 
-  findAll() {
-    return this.users.map((user) => this.toPublicUser(user));
+  async findAll() {
+    return await this.usersRepository.find();
   }
 
-  findOne(id: number) {
-    const user = this.users.find((item) => item.id === id);
+  async findOne(id: number) {
+    const user = await this.usersRepository.findOneBy({ id });
 
     if (!user) {
       return null;
@@ -43,47 +47,64 @@ export class UsersService {
     return this.toPublicUser(user);
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    const userIndex = this.users.findIndex((item) => item.id === id);
+  async updateProfile(id: number, updateUserProfileDto: UpdateUserProfileDto) {
+    const user = await this.usersRepository.findOneBy({ id });
 
-    if (userIndex === -1) {
+    if (!user) {
       return null;
     }
 
-    this.users[userIndex] = {
-      ...this.users[userIndex],
-      ...updateUserDto,
-    };
+    Object.assign(user, updateUserProfileDto);
+    const saved = await this.usersRepository.save(user);
 
-    return this.toPublicUser(this.users[userIndex]);
+    return this.toPublicUser(saved);
   }
 
-  remove(id: number) {
-    const userIndex = this.users.findIndex((item) => item.id === id);
+  async changePassword(id: number, changePasswordDto: ChangePasswordDto) {
+    const user = await this.usersRepository.findOneBy({ id });
 
-    if (userIndex === -1) {
+    if (!user) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+
+    const isPasswordValid = await bcrypt.compare(
+      changePasswordDto.oldPassword,
+      user.password,
+    );
+
+    if (!isPasswordValid) {
+      throw new BadRequestException('Неверный старый пароль');
+    }
+
+    user.password = await bcrypt.hash(changePasswordDto.newPassword, this.config.hashSalt);
+    await this.usersRepository.save(user);
+
+    return this.toPublicUser(user);
+  }
+
+  async remove(id: number) {
+    const user = await this.usersRepository.findOneBy({ id });
+
+    if (!user) {
       return null;
     }
 
-    const [removedUser] = this.users.splice(userIndex, 1);
-    return this.toPublicUser(removedUser);
+    await this.usersRepository.remove(user);
+
+    return this.toPublicUser(user);
   }
 
-  findByEmail(email: string) {
-    return this.users.find((user) => user.email === email);
+  async findByEmail(email: string) {
+    return await this.usersRepository.findOneBy({ email });
   }
 
-  createFromAuth(createUserDto: CreateUserDto): UserRecord {
-    const user: UserRecord = {
-      id: this.nextUserId,
-      name: createUserDto.name,
-      email: createUserDto.email,
-      password: createUserDto.password,
-    };
+  async createFromAuth(createUserDto: CreateUserDto): Promise<User> {
+    const user = this.usersRepository.create(createUserDto);
 
-    this.users.push(user);
-    this.nextUserId += 1;
+    return this.usersRepository.save(user);
+  }
 
-    return user;
+  async clearRefreshToken(userId: number): Promise<void> {
+    await this.usersRepository.update(userId, { refreshToken: '' as string });
   }
 }

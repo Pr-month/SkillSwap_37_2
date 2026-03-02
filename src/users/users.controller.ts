@@ -1,19 +1,20 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
-  UseGuards,
+  Get,
+  Param,
+  Patch,
+  Post,
   Request,
+  UseGuards,
 } from '@nestjs/common';
-import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
 import { TAuthRequest } from '../auth/auth.types';
+import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
+import { UsersService } from './users.service';
 
 @Controller('users')
 export class UsersController {
@@ -30,6 +31,15 @@ export class UsersController {
     return this.usersService.findOne(req.user.sub);
   }
 
+  @UseGuards(JwtAccessGuard)
+  @Patch('me/password')
+  updatePassword(
+    @Request() req: TAuthRequest,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
+    return this.usersService.changePassword(req.user.sub, changePasswordDto);
+  }
+
   @Get()
   findAll() {
     return this.usersService.findAll();
@@ -41,8 +51,8 @@ export class UsersController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  update(@Param('id') id: string, @Body() updateUserProfileDto: UpdateUserProfileDto) {
+    return this.usersService.updateProfile(+id, updateUserProfileDto);
   }
 
   @Delete(':id')

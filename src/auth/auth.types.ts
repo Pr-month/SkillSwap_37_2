@@ -9,3 +9,10 @@ export type JwtPayload = {
 export type TAuthRequest = Request & {
   user: JwtPayload;
 };
+
+export type UserFromRefreshToken = {
+  id: number;
+  email: string;
+  role: string;
+  refreshToken: string;
+};

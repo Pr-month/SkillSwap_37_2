@@ -1,31 +1,48 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigType } from '@nestjs/config';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { appConfig } from './config/app.config';
-import { jwtConfig } from './config/jwt.config';
+import { jwtConfig, IJwtConfig } from './config/jwt.config';
 import { JwtModule } from '@nestjs/jwt';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { dbConfig } from './config/db.config';
+import { SkillsModule } from './skills/skills.module';
+import { StringValue } from 'ms';
+import { FilesController } from './files/files.controller';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, jwtConfig],
+      load: [appConfig, jwtConfig, dbConfig],
     }),
 
-    JwtModule.register({
-      global: true,
-      secret: process.env.JWT_SECRET || 'jwt-secret',
-      signOptions: {
-        expiresIn: Number(process.env.JWT_ACCESS_TOKEN_EXPIRES_IN) || 3600,
-      },
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [dbConfig.KEY],
+      useFactory: (db: ConfigType<typeof dbConfig>) => db,
     }),
+
+    JwtModule.registerAsync({
+      global: true,
+      imports: [ConfigModule],
+      inject: [jwtConfig.KEY],
+      useFactory: (config: IJwtConfig) => ({
+        secret: config.secret,
+        signOptions: {
+          expiresIn: config.expiresIn as StringValue,
+        },
+      }),
+    }),
+
     UsersModule,
     AuthModule,
+    SkillsModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, FilesController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
