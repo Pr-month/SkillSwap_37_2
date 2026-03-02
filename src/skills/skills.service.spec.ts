@@ -13,6 +13,7 @@ describe('SkillsService', () => {
         {
           provide: getRepositoryToken(Skill),
           useValue: {
+            createQueryBuilder: jest.fn(),
             find: jest.fn(),
             findOneBy: jest.fn(),
             save: jest.fn(),
