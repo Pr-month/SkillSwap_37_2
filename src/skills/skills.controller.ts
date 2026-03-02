@@ -9,6 +9,7 @@ import {
   UseGuards,
   Request,
   Query,
+  ForbiddenException,
 } from '@nestjs/common';
 import { SkillsService } from './skills.service';
 import { CreateSkillDto } from './dto/create-skill.dto';
@@ -47,7 +48,23 @@ export class SkillsController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  @UseGuards(JwtAccessGuard)
+  async remove(
+    @Param('id') id: string,
+    @Request() req: TAuthRequest
+) {
+
+    const skill = await this.skillsService.findOne(+id);
+    const userId = req.user.email;
+
+    if (!userId || !skill) {
+      throw new ForbiddenException("Can`t find resources");
+    }
+
+    if (skill.owner.email != req.user.email) {
+      throw new ForbiddenException("Can`t auth for request");
+    }
+
     return this.skillsService.remove(+id);
   }
 }
