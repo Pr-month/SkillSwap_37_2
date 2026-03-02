@@ -22,11 +22,11 @@ export class AuthService {
     private readonly config: ConfigType<typeof jwtConfig>,
   ) {}
 
-  private async getTokens(user: { id: number; email: string }) {
+  private async getTokens(user: { id: number; email: string; role: string }) {
     const payload = {
       sub: user.id,
       email: user.email,
-      role: 'USER',
+      role: user.role,
     };
 
     const accessToken = await this.jwtService.signAsync(payload);
@@ -40,16 +40,10 @@ export class AuthService {
     };
   }
 
-  private toPublicUser(user: { id: number; name: string; email: string }) {
-    return {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-    };
-  }
-
   async register(createAuthDto: CreateAuthDto) {
-    const existingUser = await this.usersService.findByEmail(createAuthDto.email);
+    const existingUser = await this.usersService.findByEmail(
+      createAuthDto.email,
+    );
 
     if (existingUser) {
       throw new ConflictException('Пользователь с таким email уже существует');
@@ -62,7 +56,12 @@ export class AuthService {
       password: hashedPassword,
     });
 
-    const userData = this.toPublicUser(user);
+    const userData = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    };
     const tokens = await this.getTokens(userData);
 
     return {
@@ -87,7 +86,12 @@ export class AuthService {
       throw new UnauthorizedException('Неверный email или пароль');
     }
 
-    const userData = this.toPublicUser(user);
+    const userData = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    };
     const tokens = await this.getTokens(userData);
 
     return {
