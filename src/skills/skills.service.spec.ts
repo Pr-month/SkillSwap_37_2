@@ -18,6 +18,7 @@ describe('SkillsService', () => {
             findOneBy: jest.fn(),
             save: jest.fn(),
             remove: jest.fn(),
+            create: jest.fn(),
           },
         },
       ],
