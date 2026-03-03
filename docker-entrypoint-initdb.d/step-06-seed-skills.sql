@@ -1,7 +1,7 @@
 -- Создание тестовых навыков для пользователей
 -- Получаем ID пользователей
 WITH user_ids AS (
-  SELECT id, name FROM "user" WHERE email IN ('user1@test.com', 'user2@test.com', 'user3@test.com')
+  SELECT id, name FROM "users" WHERE email IN ('user1@test.com', 'user2@test.com', 'user3@test.com')
 )
 INSERT INTO skills (title, description, "ownerId") 
 SELECT 
