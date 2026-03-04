@@ -54,17 +54,7 @@ export class SkillsController {
     @Request() req: TAuthRequest
 ) {
 
-    const skill = await this.skillsService.findOne(+id);
-    const userId = req.user.email;
-
-    if (!userId || !skill) {
-      throw new ForbiddenException("Can`t find resources");
-    }
-
-    if (skill.owner.email != req.user.email) {
-      throw new ForbiddenException("Can`t auth for request");
-    }
-
+    await this.skillsService.findOneAndCheckOwner(+id, req.user);
     return this.skillsService.remove(+id);
   }
 }
