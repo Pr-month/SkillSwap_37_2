@@ -1,21 +1,14 @@
 import { AppDataSource } from '../config/db.config';
 import { User } from '../users/entities/user.entity';
 import { UserRole, UserGender } from '../users/users.enums';
+import * as bcrypt from 'bcrypt';
 
-async function seed() {
+export async function seedUsers() {
   await AppDataSource.initialize();
   const userRepo = AppDataSource.getRepository(User);
 
   try {
-    const existing = await userRepo.count();
-    if (existing > 0) {
-      console.log('Таблица users уже содержит данные, пропускаем сидинг.');
-      return;
-    }
-
-    // В реальном приложении используйте bcrypt, для сидинга используем простой хеш
-    const hashedPassword =
-      '$2b$10$rEImafkVza/CpCVaVt5O8e5b/D8BKe9W4I1Sm0qQyMTqMh9wM5EjG'; // хеш для password123
+    const hashedPassword = await bcrypt.hash('password123', 10); // хеш для password123
 
     const testUsers = [
       {
@@ -53,14 +46,29 @@ async function seed() {
       },
     ];
 
-    await userRepo.save(testUsers);
-    console.log(`Создано ${testUsers.length} тестовых пользователей.`);
+    for (const userData of testUsers) {
+      const existing = await userRepo.findOne({
+        where: { email: userData.email },
+      });
+      if (!existing) {
+        await userRepo.save(userData);
+        console.log(`Пользователь ${userData.email} создан.`);
+      } else {
+        console.log(
+          `Пользователь ${userData.email} уже существует, пропускаем.`,
+        );
+      }
+    }
+
+    console.log('Сидинг тестовых пользователей завершён.');
   } finally {
     await AppDataSource.destroy();
   }
 }
 
-seed().catch((e) => {
-  console.error('Ошибка при сидинге пользователей:', e);
-  process.exit(1);
-});
+if (require.main === module) {
+  seedUsers().catch((e) => {
+    console.error('Ошибка при сидинге пользователей:', e);
+    process.exit(1);
+  });
+}
