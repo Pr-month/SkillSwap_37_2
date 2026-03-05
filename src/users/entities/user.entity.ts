@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { UserGender, UserRole } from '../users.enums';
 import { Skill } from '../../skills/entities/skill.entity';
 import { Exclude } from 'class-transformer';
+import { IsArray } from 'class-validator';
 
 @Entity('users')
 export class User {
@@ -46,6 +47,10 @@ export class User {
   @Column({ nullable: true })
   @Exclude()
   refreshToken: string;
+
+  @Column("simple-array")
+  @IsArray()
+  favoriteSkills: number[];
 
   @OneToMany(() => Skill, (skill) => skill.owner)
   skills: Skill[];

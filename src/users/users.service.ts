@@ -1,4 +1,4 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -107,4 +107,40 @@ export class UsersService {
   async clearRefreshToken(userId: number): Promise<void> {
     await this.usersRepository.update(userId, { refreshToken: '' as string });
   }
+
+  async removeFavorite(id: number, userId: number){
+    const user = await this.usersRepository.findOneBy({ id: userId });
+    if(!user)
+      throw new ForbiddenException('Пользователь не найден');
+
+    const deletedSkillIndex = user.favoriteSkills.indexOf(id);
+
+    if (deletedSkillIndex === -1) {
+      throw new NotFoundException(`Навык с id ${id} не найден в избранном`);
+    }
+
+    const updatedSkills = user.favoriteSkills.filter(item=>item!==id);
+
+    Object.assign(user.favoriteSkills, updatedSkills);
+    return this.usersRepository.save(user);
+  }
+
+  async addFavorite(id: number, userId: number){
+    const user = await this.usersRepository.findOneBy({ id: userId });
+    if(!user)
+      throw new ForbiddenException('Пользователь не найден');
+    const skillIndex = user.favoriteSkills.indexOf(id);
+
+    if (skillIndex !== -1) {
+      throw new NotFoundException(`Навык с id ${id} не найден`);
+    }
+
+    const updatedSkills = user.favoriteSkills;
+
+    updatedSkills.push(id);
+
+    Object.assign(user.favoriteSkills, updatedSkills);
+    return this.usersRepository.save(user);
+  }
+
 }
