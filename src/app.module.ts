@@ -13,6 +13,7 @@ import { SkillsModule } from './skills/skills.module';
 import { StringValue } from 'ms';
 import { FilesController } from './files/files.controller';
 import { CategoriesModule } from './categories/categories.module';
+import { RequestsModule } from './requests/requests.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { CategoriesModule } from './categories/categories.module';
     AuthModule,
     SkillsModule,
     CategoriesModule,
+    RequestsModule,
   ],
   controllers: [AppController, FilesController],
   providers: [AppService],
