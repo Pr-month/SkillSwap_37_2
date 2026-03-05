@@ -28,6 +28,9 @@ export class AuthService {
       expiresIn: Number(process.env.JWT_REFRESH_TOKEN_EXPIRES_IN) || 604800,
     });
 
+    const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+    await this.usersService.updateRefreshToken(user.id, hashedRefreshToken);
+
     return {
       accessToken,
       refreshToken,
@@ -60,8 +63,6 @@ export class AuthService {
 
     const userData = this.toPublicUser(user);
     const tokens = await this.getTokens(userData);
-
-    await this.usersService.updateRefreshToken(user.id, tokens.refreshToken);
 
     return {
       user: userData,
