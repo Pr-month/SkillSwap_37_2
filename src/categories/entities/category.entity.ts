@@ -6,14 +6,13 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Skill } from '../../skills/entities/skill.entity';
 
 @Entity('categories')
 export class Category {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ unique: true })
   name: string;
 
   @ManyToOne(() => Category, (category) => category.children, {
@@ -24,7 +23,4 @@ export class Category {
 
   @OneToMany(() => Category, (category) => category.parent)
   children: Category[];
-
-  @OneToMany(() => Skill, (skill) => skill.category)
-  skills: Skill[];
 }
