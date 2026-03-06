@@ -6,6 +6,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 // import { UpdateUserDto } from './dto/update-user.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
+import { GetUsersQueryDto } from './dto/get-users-query.dto';
 import { User } from './entities/user.entity';
 import { appConfig, IConfig } from '../config/app.config';
 
@@ -33,8 +34,25 @@ export class UsersService {
     return this.toPublicUser(saved);
   }
 
-  async findAll() {
-    return await this.usersRepository.find();
+  async findAll(getUsersQueryDto: GetUsersQueryDto) {
+    const { page = 1, limit = 20 } = getUsersQueryDto;
+    const skip = (page - 1) * limit;
+
+    const [users, total] = await this.usersRepository.findAndCount({
+      skip,
+      take: limit,
+      select: ['id', 'name', 'email', 'role'],
+    });
+
+    return {
+      data: users,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOne(id: number) {
