@@ -34,6 +34,9 @@ export class AuthService {
       expiresIn: this.config.refreshExpiresIn as StringValue,
     });
 
+    const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+    await this.usersService.updateRefreshToken(user.id, hashedRefreshToken);
+
     return {
       accessToken,
       refreshToken,
@@ -109,5 +112,4 @@ export class AuthService {
     await this.usersService.clearRefreshToken(userId);
     return { message: 'Вы успешно вышли из системы', userId };
   }
-
 }
