@@ -1,7 +1,8 @@
-import {Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe} from '@nestjs/common';
+import {Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, Request} from '@nestjs/common';
 import {RequestsService} from './requests.service';
 import {CreateRequestDto} from './dto/create-request.dto';
 import {UpdateRequestDto} from './dto/update-request.dto';
+import {TAuthRequest} from "../auth/auth.types";
 
 @Controller('requests')
 export class RequestsController {
@@ -24,8 +25,12 @@ export class RequestsController {
     // }
 
     @Patch(':id')
-    update(@Param('id', ParseUUIDPipe) id: string, @Body() updateRequestDto: UpdateRequestDto) {
-        return this.requestsService.update(id, updateRequestDto);
+    update(
+        @Param('id', ParseUUIDPipe) id: string,
+        @Body() updateRequestDto: UpdateRequestDto,
+        @Request() request: TAuthRequest
+    ) {
+        return this.requestsService.update(request.user.sub, id, updateRequestDto);
     }
 
     // @Delete(':id')
