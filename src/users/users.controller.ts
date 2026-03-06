@@ -5,12 +5,14 @@ import {
   Get,
   Param,
   Patch,
+  Query,
   Request,
   UseGuards,
 } from '@nestjs/common';
 import { TAuthRequest } from '../auth/auth.types';
 import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { GetUsersQueryDto } from './dto/get-users-query.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { UsersService } from './users.service';
 
@@ -34,8 +36,8 @@ export class UsersController {
   }
 
   @Get()
-  findAll() {
-    return this.usersService.findAll();
+  findAll(@Query() getUsersQueryDto: GetUsersQueryDto) {
+    return this.usersService.findAll(getUsersQueryDto);
   }
 
   @Get(':id')
