@@ -6,6 +6,7 @@ import {Request} from "./entities/request.entity";
 import {User} from "../users/entities/user.entity";
 import {Skill} from "../skills/entities/skill.entity";
 import {RequestStatus} from "./requests.enums";
+import {UpdateRequestDto} from "./dto/update-request.dto";
 
 
 @Injectable()
@@ -67,5 +68,25 @@ export class RequestsService {
         );
 
         return await this.requestsRepository.save(request);
+    }
+
+    async update(id: string, updateRequestDto: UpdateRequestDto) {
+        const request = await this.requestsRepository.findOne({where: {id: id}});
+
+        if (!request) {
+            throw new NotFoundException('Заявка не найдена');
+        }
+
+        /* Проверим, что статус изменяет получатель */
+        // if (request.receiver.id !== userId) {}
+
+        request.status = updateRequestDto.status;
+
+        if (request.status !== RequestStatus.PENDING) {
+            request.isRead = true;
+        }
+
+        return await this.requestsRepository.save(request);
+
     }
 }
