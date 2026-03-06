@@ -1,5 +1,6 @@
 import { seedAdmin } from './seed-admin';
 import { seedUsers } from './seed-users';
+import { seedSkills } from './seed-skills';
 
 async function seeder() {
   console.log('Запуск сидинга администратора...');
@@ -9,6 +10,10 @@ async function seeder() {
   console.log('Запуск сидинга тестовых пользователей...');
   await seedUsers();
   console.log('Сидинг тестовых пользователей завершён.');
+
+  console.log('Запуск сидинга навыков...');
+  await seedSkills();
+  console.log('Сидинг навыков завершён.');
 
   console.log('Все сидинги успешно выполнены.');
 }
