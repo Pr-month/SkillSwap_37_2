@@ -8,12 +8,15 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { User } from './entities/user.entity';
 import { appConfig, IConfig } from '../config/app.config';
+import { Skill } from 'src/skills/entities/skill.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    @InjectRepository(User)
+    private readonly skillRepository: Repository<Skill>,
     @Inject(appConfig.KEY)
     private readonly config: IConfig,
   ) {}
@@ -111,15 +114,18 @@ export class UsersService {
   async removeFavorite(id: number, userId: number){
     const user = await this.usersRepository.findOneBy({ id: userId });
     if(!user)
-      throw new ForbiddenException('Пользователь не найден');
+      throw new NotFoundException('Пользователь не найден');
+    if(!user.favoriteSkills)
+      throw new NotFoundException('Список избранного пуст');
 
-    const deletedSkillIndex = user.favoriteSkills.indexOf(id);
 
-    if (deletedSkillIndex === -1) {
+    const deletedSkill = user.favoriteSkills.filter((skill)=>skill.id === id);
+
+    if (deletedSkill.length === 0) {
       throw new NotFoundException(`Навык с id ${id} не найден в избранном`);
     }
 
-    const updatedSkills = user.favoriteSkills.filter(item=>item!==id);
+    const updatedSkills = user.favoriteSkills.filter(skill=>skill.id !== id);
 
     Object.assign(user.favoriteSkills, updatedSkills);
     return this.usersRepository.save(user);
@@ -128,18 +134,33 @@ export class UsersService {
   async addFavorite(id: number, userId: number){
     const user = await this.usersRepository.findOneBy({ id: userId });
     if(!user)
-      throw new ForbiddenException('Пользователь не найден');
-    const skillIndex = user.favoriteSkills.indexOf(id);
+      throw new NotFoundException('Пользователь не найден');
 
-    if (skillIndex !== -1) {
-      throw new NotFoundException(`Навык с id ${id} не найден`);
+    if(user.favoriteSkills){
+      const newFavoriteSkill = user.favoriteSkills.filter((skill)=>skill.id === id);
+
+      if (newFavoriteSkill.length !== 0) {
+        throw new NotFoundException(`Навык с id ${id} присутствует в избранном`);
+      }
     }
+    //find skill by id
+    const skill = await this.skillRepository.findOneBy({id: id});
+    
+    if(!skill)
+        throw new NotFoundException(`Навык с id ${id} не найден`);
 
+
+    //insert
     const updatedSkills = user.favoriteSkills;
 
-    updatedSkills.push(id);
+    if(updatedSkills)
+      updatedSkills.push(skill);
 
-    Object.assign(user.favoriteSkills, updatedSkills);
+    if(user.favoriteSkills)
+      Object.assign(user.favoriteSkills, updatedSkills);
+    else
+      user.favoriteSkills = updatedSkills;
+
     return this.usersRepository.save(user);
   }
 

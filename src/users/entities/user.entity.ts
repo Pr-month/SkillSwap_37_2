@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToMany } from 'typeorm';
 import { UserGender, UserRole } from '../users.enums';
 import { Skill } from '../../skills/entities/skill.entity';
 import { Exclude } from 'class-transformer';
@@ -48,9 +48,8 @@ export class User {
   @Exclude()
   refreshToken: string;
 
-  @Column("simple-array")
-  @IsArray()
-  favoriteSkills: number[];
+  @ManyToMany(() => Skill)
+  favoriteSkills?: Skill[];
 
   @OneToMany(() => Skill, (skill) => skill.owner)
   skills: Skill[];
