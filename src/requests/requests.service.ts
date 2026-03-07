@@ -1,4 +1,4 @@
-import {BadRequestException, Injectable, NotFoundException} from '@nestjs/common';
+import {BadRequestException, ForbiddenException, Injectable, NotFoundException} from '@nestjs/common';
 import {CreateRequestDto} from './dto/create-request.dto';
 import {InjectRepository} from '@nestjs/typeorm';
 import {In, Repository} from 'typeorm';
@@ -80,7 +80,7 @@ export class RequestsService {
 
         /* Проверим, что статус изменяет получатель или админ */
         if (request.receiver.role !== UserRole.ADMIN && request.receiver.id !== userId) {
-            throw new NotFoundException('Заявку может обновить администратор или получатель');
+            throw new ForbiddenException('Заявку может обновить администратор или получатель');
         }
 
         request.status = updateRequestDto.status;
