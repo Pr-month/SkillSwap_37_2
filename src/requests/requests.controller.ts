@@ -1,0 +1,40 @@
+import {Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, Request} from '@nestjs/common';
+import {RequestsService} from './requests.service';
+import {CreateRequestDto} from './dto/create-request.dto';
+import {UpdateRequestDto} from './dto/update-request.dto';
+import {TAuthRequest} from "../auth/auth.types";
+
+@Controller('requests')
+export class RequestsController {
+    constructor(private readonly requestsService: RequestsService) {
+    }
+
+    @Post()
+    create(@Body() createRequestDto: CreateRequestDto) {
+        return this.requestsService.create(createRequestDto);
+    }
+
+    // @Get()
+    // findAll() {
+    //     return this.requestsService.findAll();
+    // }
+    //
+    // @Get(':id')
+    // findOne(@Param('id', ParseUUIDPipe) id: string) {
+    //     return this.requestsService.findOne(id);
+    // }
+
+    @Patch(':id')
+    update(
+        @Param('id', ParseUUIDPipe) id: string,
+        @Body() updateRequestDto: UpdateRequestDto,
+        @Request() request: TAuthRequest
+    ) {
+        return this.requestsService.update(request.user.sub, id, updateRequestDto);
+    }
+
+    // @Delete(':id')
+    // remove(@Param('id', ParseUUIDPipe) id: string) {
+    //     return this.requestsService.remove(id);
+    // }
+}

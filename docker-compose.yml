@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
     stop_grace_period: 30s
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $POSTGRES_PORT"]
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -18,16 +18,32 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - db_data:/var/lib/postgresql
-      - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+      # - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
     networks:
       - internal
     ports:
       - "5432:5432"
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: skillswap-pgadmin
+    restart: unless-stopped
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@example.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    ports:
+      - "8080:80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    networks:
+      - internal
+    depends_on:
+      - database
 
 volumes:
   # frontend:
   # public:
   db_data:
+  pgadmin-data:
 
 networks:
   internal:

@@ -7,10 +7,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { GetSkillsQueryDto } from './dto/get-skills-query.dto';
 import { Skill } from './entities/skill.entity';
+import { JwtPayload } from 'src/auth/auth.types';
 
 @Injectable()
 export class SkillsService {
@@ -58,9 +57,36 @@ export class SkillsService {
     };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} skill`;
+  async findOne(id: number) {
+    const skill = await this.skillsRepository.findOne({
+      where: { id },
+      relations: ['owner'],
+    });
+
+    if (!skill) {
+      throw new NotFoundException(`Навык с id ${id} не найден`);
+    }
+
+    return skill;
   }
+
+  async findOneAndCheckOwner(id: number, user: JwtPayload) {
+    const skill = await this.skillsRepository.findOne({
+      where: { id },
+      relations: ['owner'],
+    });
+
+    if (!skill) {
+      throw new NotFoundException(`Навык с id ${id} не найден`);
+    }
+
+    if (skill.owner.email != user.email) {
+      throw new ForbiddenException("Can`t auth for request");
+    }  
+
+    return true;
+  }
+
 
   async update(id: number, updateSkillDto: UpdateSkillDto, userId: number) {
     const skill = await this.skillsRepository.findOne({

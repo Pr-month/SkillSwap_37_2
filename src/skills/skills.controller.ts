@@ -9,6 +9,7 @@ import {
   UseGuards,
   Request,
   Query,
+  ForbiddenException,
 } from '@nestjs/common';
 import { SkillsService } from './skills.service';
 import { CreateSkillDto } from './dto/create-skill.dto';
@@ -48,7 +49,13 @@ export class SkillsController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  @UseGuards(JwtAccessGuard)
+  async remove(
+    @Param('id') id: string,
+    @Request() req: TAuthRequest
+) {
+
+    await this.skillsService.findOneAndCheckOwner(+id, req.user);
     return this.skillsService.remove(+id);
   }
 
