@@ -43,6 +43,14 @@ export class UsersService {
       take: limit,
       select: ['id', 'name', 'email', 'role'],
     });
+    
+    const totalPages = Math.ceil(total / limit) || 1;
+
+    if (page > totalPages) {
+      throw new NotFoundException(
+        `Страница ${page} не найдена. Всего страниц: ${totalPages}`,
+      );
+    }
 
     return {
       data: users,
