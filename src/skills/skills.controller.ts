@@ -17,10 +17,11 @@ import { UpdateSkillDto } from './dto/update-skill.dto';
 import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
 import { TAuthRequest } from '../auth/auth.types';
 import { GetSkillsQueryDto } from './dto/get-skills-query.dto';
+import { UsersService } from 'src/users/users.service';
 
 @Controller('skills')
 export class SkillsController {
-  constructor(private readonly skillsService: SkillsService) {}
+  constructor(private readonly skillsService: SkillsService, private readonly userService: UsersService) {}
 
   @Post()
   create(@Body() createSkillDto: CreateSkillDto) {
@@ -56,5 +57,21 @@ export class SkillsController {
 
     await this.skillsService.findOneAndCheckOwner(+id, req.user);
     return this.skillsService.remove(+id);
+  }
+
+  @Post(':id/favorite')
+  @UseGuards(JwtAccessGuard)
+  addFavorite(
+    @Param('id') id: string,
+    @Request() req: TAuthRequest) {
+    return this.userService.addFavorite(+id, req.user.sub);
+  }
+
+  @Delete(':id/favorite')
+  @UseGuards(JwtAccessGuard)
+  removeFavorite(
+    @Param('id') id: string,
+    @Request() req: TAuthRequest) {
+    return this.userService.removeFavorite(+id, req.user.sub);
   }
 }

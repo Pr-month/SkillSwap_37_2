@@ -14,6 +14,8 @@ import { StringValue } from 'ms';
 import { FilesController } from './files/files.controller';
 import { CategoriesModule } from './categories/categories.module';
 import { RequestsModule } from './requests/requests.module';
+import { APP_GUARD } from '@nestjs/core';
+import { RolesGuard } from './auth/guards/roles.guard';
 
 @Module({
   imports: [
@@ -47,6 +49,11 @@ import { RequestsModule } from './requests/requests.module';
     RequestsModule,
   ],
   controllers: [AppController, FilesController],
-  providers: [AppService],
+  providers: [AppService,
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+  ],
 })
 export class AppModule { }

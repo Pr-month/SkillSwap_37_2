@@ -1,4 +1,4 @@
-import {BadRequestException, Injectable, Logger, NotFoundException} from '@nestjs/common';
+import {BadRequestException, ForbiddenException, Injectable, NotFoundException} from '@nestjs/common';
 import {CreateRequestDto} from './dto/create-request.dto';
 import {InjectRepository} from '@nestjs/typeorm';
 import {In, Repository} from 'typeorm';
@@ -6,6 +6,8 @@ import {Request} from "./entities/request.entity";
 import {User} from "../users/entities/user.entity";
 import {Skill} from "../skills/entities/skill.entity";
 import {RequestStatus} from "./requests.enums";
+import {UpdateRequestDto} from "./dto/update-request.dto";
+import {UserRole} from "../users/users.enums";
 
 
 @Injectable()
@@ -67,5 +69,27 @@ export class RequestsService {
         );
 
         return await this.requestsRepository.save(request);
+    }
+
+    async update(userId: string, id: string, updateRequestDto: UpdateRequestDto) {
+        const request = await this.requestsRepository.findOne({where: {id: id}});
+
+        if (!request) {
+            throw new NotFoundException('Заявка не найдена');
+        }
+
+        /* Проверим, что статус изменяет получатель или админ */
+        if (request.receiver.role !== UserRole.ADMIN && request.receiver.id !== userId) {
+            throw new ForbiddenException('Заявку может обновить администратор или получатель');
+        }
+
+        request.status = updateRequestDto.status;
+
+        if (request.status !== RequestStatus.PENDING) {
+            request.isRead = true;
+        }
+
+        return await this.requestsRepository.save(request);
+
     }
 }
