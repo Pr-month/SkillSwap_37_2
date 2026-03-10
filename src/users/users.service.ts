@@ -1,13 +1,14 @@
-import {BadRequestException, ForbiddenException, Inject, Injectable, NotFoundException} from '@nestjs/common';
-import {InjectRepository} from '@nestjs/typeorm';
-import {Repository} from 'typeorm';
+import { BadRequestException, ForbiddenException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import {CreateUserDto} from './dto/create-user.dto';
-import {ChangePasswordDto} from './dto/change-password.dto';
-import {UpdateUserProfileDto} from './dto/update-user-profile.dto';
-import {User} from './entities/user.entity';
-import {appConfig, IConfig} from '../config/app.config';
-import {Skill} from 'src/skills/entities/skill.entity';
+import { appConfig, IConfig } from '../config/app.config';
+import { CreateUserDto } from './dto/create-user.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
+import { GetUsersQueryDto } from './dto/get-users-query.dto';
+import { User } from './entities/user.entity';
+import { Skill } from 'src/skills/entities/skill.entity';
 
 @Injectable()
 export class UsersService {
@@ -36,12 +37,37 @@ export class UsersService {
         return this.toPublicUser(saved);
     }
 
-    async findAll() {
-        return await this.usersRepository.find();
+    async findAll(getUsersQueryDto: GetUsersQueryDto) {
+        const { page = 1, limit = 20 } = getUsersQueryDto;
+        const skip = (page - 1) * limit;
+
+        const [users, total] = await this.usersRepository.findAndCount({
+            skip,
+            take: limit,
+            select: ['id', 'name', 'email', 'role'],
+        });
+
+        const totalPages = Math.ceil(total / limit) || 1;
+
+        if (page > totalPages) {
+            throw new NotFoundException(
+                `Страница ${page} не найдена. Всего страниц: ${totalPages}`,
+            );
+        }
+
+        return {
+            data: users,
+            meta: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit),
+            },
+        };
     }
 
     async findOne(id: number) {
-        const user = await this.usersRepository.findOneBy({id});
+        const user = await this.usersRepository.findOneBy({ id });
 
         if (!user) {
             return null;
@@ -51,7 +77,7 @@ export class UsersService {
     }
 
     async updateProfile(id: number, updateUserProfileDto: UpdateUserProfileDto) {
-        const user = await this.usersRepository.findOneBy({id});
+        const user = await this.usersRepository.findOneBy({ id });
 
         if (!user) {
             return null;
@@ -64,7 +90,7 @@ export class UsersService {
     }
 
     async changePassword(id: number, changePasswordDto: ChangePasswordDto) {
-        const user = await this.usersRepository.findOneBy({id});
+        const user = await this.usersRepository.findOneBy({ id });
 
         if (!user) {
             throw new NotFoundException('Пользователь не найден');
@@ -86,7 +112,7 @@ export class UsersService {
     }
 
     async remove(id: number) {
-        const user = await this.usersRepository.findOneBy({id});
+        const user = await this.usersRepository.findOneBy({ id });
 
         if (!user) {
             return null;
@@ -98,7 +124,7 @@ export class UsersService {
     }
 
     async findByEmail(email: string) {
-        return await this.usersRepository.findOneBy({email});
+        return await this.usersRepository.findOneBy({ email });
     }
 
     async createFromAuth(createUserDto: CreateUserDto): Promise<User> {
@@ -108,7 +134,7 @@ export class UsersService {
     }
 
     async clearRefreshToken(userId: number): Promise<void> {
-        await this.usersRepository.update(userId, {refreshToken: '' as string});
+        await this.usersRepository.update(userId, { refreshToken: '' as string });
     }
 
     async updateRefreshToken(userId: number, refreshToken: string) {
@@ -118,7 +144,7 @@ export class UsersService {
     }
 
     async removeFavorite(id: number, userId: number) {
-        const user = await this.usersRepository.findOneBy({id: userId});
+        const user = await this.usersRepository.findOneBy({ id: userId });
         if (!user)
             throw new NotFoundException('Пользователь не найден');
         if (!user.favoriteSkills)
@@ -138,7 +164,7 @@ export class UsersService {
     }
 
     async addFavorite(id: number, userId: number) {
-        const user = await this.usersRepository.findOneBy({id: userId});
+        const user = await this.usersRepository.findOneBy({ id: userId });
         if (!user)
             throw new NotFoundException('Пользователь не найден');
 
@@ -150,7 +176,7 @@ export class UsersService {
             }
         }
         //find skill by id
-        const skill = await this.skillRepository.findOneBy({id: id});
+        const skill = await this.skillRepository.findOneBy({ id: id });
 
         if (!skill)
             throw new NotFoundException(`Навык с id ${id} не найден`);
