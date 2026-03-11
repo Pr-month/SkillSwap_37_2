@@ -4,6 +4,10 @@ import { seedSkills } from './seed-skills';
 import { seedCategories } from './seed-categories';
 
 async function seeder() {
+  console.log('Запуск сидинга категорий');
+  await seedCategories();
+  console.log('Сидинг категорий завершён');
+
   console.log('Запуск сидинга администратора...');
   await seedAdmin();
   console.log('Сидинг администратора завершён.');
@@ -15,10 +19,6 @@ async function seeder() {
   console.log('Запуск сидинга навыков...');
   await seedSkills();
   console.log('Сидинг навыков завершён.');
-
-  console.log('Запуск сидинга категорий');
-  await seedCategories();
-  console.log('Сидинг категорий завершён');
 
   console.log('Все сидинги успешно выполнены.');
 }
