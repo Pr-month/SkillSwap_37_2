@@ -13,14 +13,18 @@ import {
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-// import {JwtAccessGuard} from "../auth/guards/jwt-access.guard";
+import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../users/users.enums';
 
 @Controller('categories')
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
   @Post()
-  // @UseGuards(JwtAccessGuard)
+  @UseGuards(JwtAccessGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   create(@Body() createCategoryDto: CreateCategoryDto) {
     return this.categoriesService.create(createCategoryDto);
   }
@@ -36,7 +40,8 @@ export class CategoriesController {
   }
 
   @Patch(':id')
-  // @UseGuards(JwtAccessGuard)
+  @UseGuards(JwtAccessGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
@@ -45,7 +50,8 @@ export class CategoriesController {
   }
 
   @Delete(':id')
-  // @UseGuards(JwtAccessGuard)
+  @UseGuards(JwtAccessGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.categoriesService.remove(id);
   }
