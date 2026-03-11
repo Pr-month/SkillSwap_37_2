@@ -4,26 +4,22 @@ import {
   Delete,
   Get,
   Param,
+  ParseUUIDPipe,
   Patch,
-  Post,
+  Query,
   Request,
   UseGuards,
 } from '@nestjs/common';
 import { TAuthRequest } from '../auth/auth.types';
 import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
 import { ChangePasswordDto } from './dto/change-password.dto';
-import { CreateUserDto } from './dto/create-user.dto';
+import { GetUsersQueryDto } from './dto/get-users-query.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { UsersService } from './users.service';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
-
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
-  }
 
   @UseGuards(JwtAccessGuard)
   @Get('me')
@@ -41,22 +37,25 @@ export class UsersController {
   }
 
   @Get()
-  findAll() {
-    return this.usersService.findAll();
+  findAll(@Query() getUsersQueryDto: GetUsersQueryDto) {
+    return this.usersService.findAll(getUsersQueryDto);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
+    return this.usersService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserProfileDto: UpdateUserProfileDto) {
-    return this.usersService.updateProfile(+id, updateUserProfileDto);
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateUserProfileDto: UpdateUserProfileDto,
+  ) {
+    return this.usersService.updateProfile(id, updateUserProfileDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    return this.usersService.remove(id);
   }
 }

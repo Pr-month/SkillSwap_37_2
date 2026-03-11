@@ -1,7 +1,7 @@
 import { Request } from 'express';
 
 export type JwtPayload = {
-  sub: number;
+  sub: string;
   email: string;
   role: string;
 };
@@ -11,7 +11,7 @@ export type TAuthRequest = Request & {
 };
 
 export type UserFromRefreshToken = {
-  id: number;
+  id: string;
   email: string;
   role: string;
   refreshToken: string;

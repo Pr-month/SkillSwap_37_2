@@ -75,7 +75,12 @@ describe('UsersService', () => {
 
   describe('changePassword', () => {
     it('should change password when old password is correct', async () => {
-      const user = { id: 1, name: 'Test', email: 'test@test.com', password: 'oldHash' };
+      const user = {
+        id: 1,
+        name: 'Test',
+        email: 'test@test.com',
+        password: 'oldHash',
+      };
       mockRepository.findOneBy.mockResolvedValue(user);
       mockRepository.save.mockResolvedValue(user);
       jest.spyOn(bcrypt, 'compare').mockImplementation(async () => true);
@@ -87,13 +92,21 @@ describe('UsersService', () => {
       });
 
       expect(bcrypt.compare).toHaveBeenCalledWith('oldPass', 'oldHash');
-      expect(bcrypt.hash).toHaveBeenCalledWith('newPass123', mockConfig.hashSalt);
+      expect(bcrypt.hash).toHaveBeenCalledWith(
+        'newPass123',
+        mockConfig.hashSalt,
+      );
       expect(mockRepository.save).toHaveBeenCalled();
       expect(result).toEqual({ id: 1, name: 'Test', email: 'test@test.com' });
     });
 
     it('should throw BadRequestException when old password is wrong', async () => {
-      const user = { id: 1, name: 'Test', email: 'test@test.com', password: 'oldHash' };
+      const user = {
+        id: 1,
+        name: 'Test',
+        email: 'test@test.com',
+        password: 'oldHash',
+      };
       mockRepository.findOneBy.mockResolvedValue(user);
       jest.spyOn(bcrypt, 'compare').mockImplementation(async () => false);
 

@@ -1,12 +1,19 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToMany,
+  ManyToMany,
+} from 'typeorm';
 import { UserGender, UserRole } from '../users.enums';
 import { Skill } from '../../skills/entities/skill.entity';
 import { Exclude } from 'class-transformer';
+import { IsArray } from 'class-validator';
 
 @Entity('users')
 export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
   name: string;
@@ -46,6 +53,9 @@ export class User {
   @Column({ nullable: true })
   @Exclude()
   refreshToken: string;
+
+  @ManyToMany(() => Skill)
+  favoriteSkills?: Skill[];
 
   @OneToMany(() => Skill, (skill) => skill.owner)
   skills: Skill[];

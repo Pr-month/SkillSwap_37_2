@@ -1,19 +1,28 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { appConfig, IConfig } from '../config/app.config';
 import { CreateUserDto } from './dto/create-user.dto';
-// import { UpdateUserDto } from './dto/update-user.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
+import { GetUsersQueryDto } from './dto/get-users-query.dto';
 import { User } from './entities/user.entity';
-import { appConfig, IConfig } from '../config/app.config';
+import { Skill } from 'src/skills/entities/skill.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    @InjectRepository(User)
+    private readonly skillRepository: Repository<Skill>,
     @Inject(appConfig.KEY)
     private readonly config: IConfig,
   ) {}
@@ -33,11 +42,36 @@ export class UsersService {
     return this.toPublicUser(saved);
   }
 
-  async findAll() {
-    return await this.usersRepository.find();
+  async findAll(getUsersQueryDto: GetUsersQueryDto) {
+    const { page = 1, limit = 20 } = getUsersQueryDto;
+    const skip = (page - 1) * limit;
+
+    const [users, total] = await this.usersRepository.findAndCount({
+      skip,
+      take: limit,
+      select: ['id', 'name', 'email', 'role'],
+    });
+
+    const totalPages = Math.ceil(total / limit) || 1;
+
+    if (page > totalPages) {
+      throw new NotFoundException(
+        `Страница ${page} не найдена. Всего страниц: ${totalPages}`,
+      );
+    }
+
+    return {
+      data: users,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const user = await this.usersRepository.findOneBy({ id });
 
     if (!user) {
@@ -47,7 +81,7 @@ export class UsersService {
     return this.toPublicUser(user);
   }
 
-  async updateProfile(id: number, updateUserProfileDto: UpdateUserProfileDto) {
+  async updateProfile(id: string, updateUserProfileDto: UpdateUserProfileDto) {
     const user = await this.usersRepository.findOneBy({ id });
 
     if (!user) {
@@ -60,7 +94,7 @@ export class UsersService {
     return this.toPublicUser(saved);
   }
 
-  async changePassword(id: number, changePasswordDto: ChangePasswordDto) {
+  async changePassword(id: string, changePasswordDto: ChangePasswordDto) {
     const user = await this.usersRepository.findOneBy({ id });
 
     if (!user) {
@@ -76,13 +110,16 @@ export class UsersService {
       throw new BadRequestException('Неверный старый пароль');
     }
 
-    user.password = await bcrypt.hash(changePasswordDto.newPassword, this.config.hashSalt);
+    user.password = await bcrypt.hash(
+      changePasswordDto.newPassword,
+      this.config.hashSalt,
+    );
     await this.usersRepository.save(user);
 
     return this.toPublicUser(user);
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const user = await this.usersRepository.findOneBy({ id });
 
     if (!user) {
@@ -104,7 +141,64 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
-  async clearRefreshToken(userId: number): Promise<void> {
+  async clearRefreshToken(userId: string): Promise<void> {
     await this.usersRepository.update(userId, { refreshToken: '' as string });
+  }
+
+  async updateRefreshToken(userId: string, refreshToken: string) {
+    await this.usersRepository.update(userId, {
+      refreshToken,
+    });
+  }
+
+  async removeFavorite(id: string, userId: string) {
+    const user = await this.usersRepository.findOneBy({ id: userId });
+    if (!user) throw new NotFoundException('Пользователь не найден');
+    if (!user.favoriteSkills)
+      throw new NotFoundException('Список избранного пуст');
+
+    const deletedSkill = user.favoriteSkills.filter((skill) => skill.id === id);
+
+    if (deletedSkill.length === 0) {
+      throw new NotFoundException(`Навык с id ${id} не найден в избранном`);
+    }
+
+    const updatedSkills = user.favoriteSkills.filter(
+      (skill) => skill.id !== id,
+    );
+
+    Object.assign(user.favoriteSkills, updatedSkills);
+    return this.usersRepository.save(user);
+  }
+
+  async addFavorite(id: string, userId: string) {
+    const user = await this.usersRepository.findOneBy({ id: userId });
+    if (!user) throw new NotFoundException('Пользователь не найден');
+
+    if (user.favoriteSkills) {
+      const newFavoriteSkill = user.favoriteSkills.filter(
+        (skill) => skill.id === id,
+      );
+
+      if (newFavoriteSkill.length !== 0) {
+        throw new NotFoundException(
+          `Навык с id ${id} присутствует в избранном`,
+        );
+      }
+    }
+    //find skill by id
+    const skill = await this.skillRepository.findOneBy({ id: id });
+
+    if (!skill) throw new NotFoundException(`Навык с id ${id} не найден`);
+
+    //insert
+    const updatedSkills = user.favoriteSkills;
+
+    if (updatedSkills) updatedSkills.push(skill);
+
+    if (user.favoriteSkills) Object.assign(user.favoriteSkills, updatedSkills);
+    else user.favoriteSkills = updatedSkills;
+
+    return this.usersRepository.save(user);
   }
 }
