@@ -1,4 +1,4 @@
-import {Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, Request} from '@nestjs/common';
+import {Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, Request, Req} from '@nestjs/common';
 import {RequestsService} from './requests.service';
 import {CreateRequestDto} from './dto/create-request.dto';
 import {UpdateRequestDto} from './dto/update-request.dto';
@@ -14,16 +14,6 @@ export class RequestsController {
         return this.requestsService.create(createRequestDto);
     }
 
-    // @Get()
-    // findAll() {
-    //     return this.requestsService.findAll();
-    // }
-    //
-    // @Get(':id')
-    // findOne(@Param('id', ParseUUIDPipe) id: string) {
-    //     return this.requestsService.findOne(id);
-    // }
-
     @Patch(':id')
     update(
         @Param('id', ParseUUIDPipe) id: string,
@@ -33,8 +23,13 @@ export class RequestsController {
         return this.requestsService.update(request.user.sub, id, updateRequestDto);
     }
 
-    // @Delete(':id')
-    // remove(@Param('id', ParseUUIDPipe) id: string) {
-    //     return this.requestsService.remove(id);
-    // }
+    @Get('incoming')
+    async getIncoming(@Request() request: TAuthRequest) {
+        return this.requestsService.findIncoming(request.user.sub);
+    }
+
+    @Get('outgoing')
+    async getOutgoing(@Request() request: TAuthRequest) {
+        return this.requestsService.findOutgoing(request.user.sub);
+    }
 }
