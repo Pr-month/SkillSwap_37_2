@@ -2,11 +2,13 @@ import {
   ArgumentsHost,
   Catch,
   ExceptionFilter,
+  HttpException,
   PayloadTooLargeException,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { EntityNotFoundError, QueryFailedError } from 'typeorm';
 import { UPLOAD_ERROR } from '../files/files.errors';
+
 @Catch()
 export class AppExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
@@ -14,6 +16,13 @@ export class AppExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     let status = 500;
     let message = 'Internal Server Error';
+
+    if (exception instanceof HttpException) {
+      status = exception.getStatus();
+      const res = exception.getResponse();
+      /* Строка или объект ValidationPipe */
+      message = typeof res === 'object' ? (res as any).message || res : res;
+    }
 
     if (exception instanceof EntityNotFoundError) {
       status = 404;
