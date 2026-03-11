@@ -14,7 +14,7 @@ import {UserRole} from "../users/users.enums";
 export class RequestsService {
     constructor(
         @InjectRepository(Request)
-        private readonly requestsRepository: Repository<Request>,
+        private readonly requestRepository: Repository<Request>,
         @InjectRepository(User)
         private readonly userRepository: Repository<User>,
         @InjectRepository(Skill)
@@ -45,7 +45,7 @@ export class RequestsService {
             throw new BadRequestException('Невозможно отправить заявку самому себе');
         }
 
-        const alreadyExist = await this.requestsRepository.findOne({
+        const alreadyExist = await this.requestRepository.findOne({
             where: {
                 sender: {id: senderId},
                 receiver: {id: receiverId},
@@ -59,7 +59,7 @@ export class RequestsService {
             throw new BadRequestException('Заявка уже существует или находится в работе');
         }
 
-        const request = this.requestsRepository.create(
+        const request = this.requestRepository.create(
             {
                 sender: {id: senderId},
                 receiver: {id: receiverId},
@@ -68,11 +68,11 @@ export class RequestsService {
             }
         );
 
-        return await this.requestsRepository.save(request);
+        return await this.requestRepository.save(request);
     }
 
     async update(userId: string, id: string, updateRequestDto: UpdateRequestDto) {
-        const request = await this.requestsRepository.findOne({where: {id: id}});
+        const request = await this.requestRepository.findOne({where: {id: id}});
 
         if (!request) {
             throw new NotFoundException('Заявка не найдена');
@@ -89,7 +89,28 @@ export class RequestsService {
             request.isRead = true;
         }
 
-        return await this.requestsRepository.save(request);
+        return await this.requestRepository.save(request);
 
+    }
+
+    async findIncoming(userId: string) {
+        return this.requestRepository.find({
+            where: {
+                receiver: {id: userId},
+                status: RequestStatus.PENDING
+            },
+            relations: ['sender', 'receiver', 'requestedSkill', 'offeredSkill'],
+            order: {createdAt: 'DESC'},
+        });
+    }
+
+    async findOutgoing(userId: string) {
+        return this.requestRepository.find({
+            where: {
+                sender: {id: userId}
+            },
+            relations: ['sender', 'receiver', 'requestedSkill', 'offeredSkill'],
+            order: {createdAt: 'DESC'}
+        });
     }
 }
