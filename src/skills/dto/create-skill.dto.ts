@@ -2,10 +2,10 @@ import {
   IsString,
   IsNotEmpty,
   IsOptional,
-  IsNumber,
   IsArray,
   IsUrl,
   MinLength,
+  IsUUID,
 } from 'class-validator';
 
 export class CreateSkillDto {
@@ -18,12 +18,16 @@ export class CreateSkillDto {
   @IsNotEmpty()
   description: string;
 
-  @IsNumber()
+  @IsUUID()
   @IsNotEmpty()
-  category: number;
+  category: string;
 
   @IsArray()
   @IsOptional()
   @IsUrl({}, { each: true })
   images: string[];
+
+  @IsUUID()
+  @IsNotEmpty()
+  owner: string;
 }

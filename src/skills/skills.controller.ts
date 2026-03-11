@@ -10,6 +10,7 @@ import {
   Request,
   Query,
   ForbiddenException,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { SkillsService } from './skills.service';
 import { CreateSkillDto } from './dto/create-skill.dto';
@@ -21,7 +22,10 @@ import { UsersService } from 'src/users/users.service';
 
 @Controller('skills')
 export class SkillsController {
-  constructor(private readonly skillsService: SkillsService, private readonly userService: UsersService) {}
+  constructor(
+    private readonly skillsService: SkillsService,
+    private readonly userService: UsersService,
+  ) {}
 
   @Post()
   create(@Body() createSkillDto: CreateSkillDto) {
@@ -34,44 +38,45 @@ export class SkillsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.skillsService.findOne(+id);
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
+    return this.skillsService.findOne(id);
   }
 
   @UseGuards(JwtAccessGuard)
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() updateSkillDto: UpdateSkillDto,
     @Request() req: TAuthRequest,
   ) {
-    return this.skillsService.update(+id, updateSkillDto, req.user.sub);
+    return this.skillsService.update(id, updateSkillDto, req.user.sub);
   }
 
   @Delete(':id')
   @UseGuards(JwtAccessGuard)
   async remove(
-    @Param('id') id: string,
-    @Request() req: TAuthRequest
-) {
-
-    await this.skillsService.findOneAndCheckOwner(+id, req.user);
-    return this.skillsService.remove(+id);
+    @Param('id', ParseUUIDPipe) id: string,
+    @Request() req: TAuthRequest,
+  ) {
+    await this.skillsService.findOneAndCheckOwner(id, req.user);
+    return this.skillsService.remove(id);
   }
 
   @Post(':id/favorite')
   @UseGuards(JwtAccessGuard)
   addFavorite(
-    @Param('id') id: string,
-    @Request() req: TAuthRequest) {
-    return this.userService.addFavorite(+id, req.user.sub);
+    @Param('id', ParseUUIDPipe) id: string,
+    @Request() req: TAuthRequest,
+  ) {
+    return this.userService.addFavorite(id, req.user.sub);
   }
 
   @Delete(':id/favorite')
   @UseGuards(JwtAccessGuard)
   removeFavorite(
-    @Param('id') id: string,
-    @Request() req: TAuthRequest) {
-    return this.userService.removeFavorite(+id, req.user.sub);
+    @Param('id', ParseUUIDPipe) id: string,
+    @Request() req: TAuthRequest,
+  ) {
+    return this.userService.removeFavorite(id, req.user.sub);
   }
 }

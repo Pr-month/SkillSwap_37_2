@@ -7,7 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { appConfig } from './config/app.config';
 import { jwtConfig, IJwtConfig } from './config/jwt.config';
 import { JwtModule } from '@nestjs/jwt';
-import { TypeOrmModule } from "@nestjs/typeorm";
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { dbConfig } from './config/db.config';
 import { SkillsModule } from './skills/skills.module';
 import { StringValue } from 'ms';
@@ -49,11 +49,12 @@ import { RolesGuard } from './auth/guards/roles.guard';
     RequestsModule,
   ],
   controllers: [AppController, FilesController],
-  providers: [AppService,
+  providers: [
+    AppService,
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
     },
   ],
 })
-export class AppModule { }
+export class AppModule {}

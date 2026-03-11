@@ -19,7 +19,11 @@ export class SkillsService {
   ) {}
 
   async create(createSkillDto: CreateSkillDto) {
-    const skill = this.skillsRepository.create(createSkillDto);
+    const skill = this.skillsRepository.create({
+      ...createSkillDto,
+      category: { id: createSkillDto.category },
+      owner: { id: createSkillDto.owner },
+    });
     return await this.skillsRepository.save(skill);
   }
 
@@ -57,7 +61,7 @@ export class SkillsService {
     };
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const skill = await this.skillsRepository.findOne({
       where: { id },
       relations: ['owner'],
@@ -70,7 +74,7 @@ export class SkillsService {
     return skill;
   }
 
-  async findOneAndCheckOwner(id: number, user: JwtPayload) {
+  async findOneAndCheckOwner(id: string, user: JwtPayload) {
     const skill = await this.skillsRepository.findOne({
       where: { id },
       relations: ['owner'],
@@ -81,14 +85,13 @@ export class SkillsService {
     }
 
     if (skill.owner.email != user.email) {
-      throw new ForbiddenException("Can`t auth for request");
-    }  
+      throw new ForbiddenException('Can`t auth for request');
+    }
 
     return true;
   }
 
-
-  async update(id: number, updateSkillDto: UpdateSkillDto, userId: number) {
+  async update(id: string, updateSkillDto: UpdateSkillDto, userId: string) {
     const skill = await this.skillsRepository.findOne({
       where: { id },
       relations: ['owner'],
@@ -106,7 +109,7 @@ export class SkillsService {
     return this.skillsRepository.save(skill);
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} skill`;
   }
 }

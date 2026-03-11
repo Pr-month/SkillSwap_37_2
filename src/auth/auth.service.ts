@@ -22,7 +22,7 @@ export class AuthService {
     private readonly config: ConfigType<typeof jwtConfig>,
   ) {}
 
-  private async getTokens(user: { id: number; email: string; role: string }) {
+  private async getTokens(user: { id: string; email: string; role: string }) {
     const payload = {
       sub: user.id,
       email: user.email,
@@ -103,12 +103,12 @@ export class AuthService {
     };
   }
 
-  async refresh(user: { id: number; email: string; role: string }) {
+  async refresh(user: { id: string; email: string; role: string }) {
     const tokens = await this.getTokens(user);
     return { tokens };
   }
 
-  async logout(userId: number) {
+  async logout(userId: string) {
     await this.usersService.clearRefreshToken(userId);
     return { message: 'Вы успешно вышли из системы', userId };
   }

@@ -32,5 +32,4 @@ export class AuthController {
   logout(@CurrentUser() user: JwtPayload) {
     return this.authService.logout(user.sub);
   }
-  
 }

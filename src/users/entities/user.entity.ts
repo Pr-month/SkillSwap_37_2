@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToMany,
+  ManyToMany,
+} from 'typeorm';
 import { UserGender, UserRole } from '../users.enums';
 import { Skill } from '../../skills/entities/skill.entity';
 import { Exclude } from 'class-transformer';
@@ -6,8 +12,8 @@ import { IsArray } from 'class-validator';
 
 @Entity('users')
 export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
   name: string;

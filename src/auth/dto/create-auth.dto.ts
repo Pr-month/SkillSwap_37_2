@@ -1,4 +1,15 @@
-import { IsDate, IsDateString, IsEmail, IsEnum, IsNotEmpty, IsString, IsUrl, MaxDate, MinDate, MinLength } from 'class-validator';
+import {
+  IsDate,
+  IsDateString,
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsString,
+  IsUrl,
+  MaxDate,
+  MinDate,
+  MinLength,
+} from 'class-validator';
 import { UserGender } from 'src/users/users.enums';
 
 export class CreateAuthDto {
@@ -23,9 +34,9 @@ export class CreateAuthDto {
   @IsDateString()
   //uncomment if required
   // @IsNotEmpty()
-  @MinDate(new Date("1900-01-01"))
+  @MinDate(new Date('1900-01-01'))
   @MaxDate(new Date())
-  birthdate : string;
+  birthdate: string;
 
   @IsString()
   //uncomment if required
