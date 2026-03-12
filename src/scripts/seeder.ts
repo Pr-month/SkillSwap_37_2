@@ -1,19 +1,14 @@
 import { seedAdmin } from './seed-admin';
-import { seedUsers } from './seed-users';
-import { seedSkills } from './seed-skills';
+import { seedCategories } from './seed-categories';
 
 async function seeder() {
+  console.log('Запуск сидинга категорий...');
+  await seedCategories();
+  console.log('Сидинг категорий завершён.');
+
   console.log('Запуск сидинга администратора...');
   await seedAdmin();
   console.log('Сидинг администратора завершён.');
-
-  console.log('Запуск сидинга тестовых пользователей...');
-  await seedUsers();
-  console.log('Сидинг тестовых пользователей завершён.');
-
-  console.log('Запуск сидинга навыков...');
-  await seedSkills();
-  console.log('Сидинг навыков завершён.');
 
   console.log('Все сидинги успешно выполнены.');
 }
