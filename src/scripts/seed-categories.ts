@@ -3,9 +3,6 @@ import { Category } from '../categories/entities/category.entity';
 import { CategoriesData } from './seed-categories.data';
 
 export async function seedCategories() {
-  try {
-    await AppDataSource.initialize();
-
     const categoryRepo = AppDataSource.getRepository(Category);
 
     if ((await categoryRepo.count()) > 0) {
@@ -28,11 +25,4 @@ export async function seedCategories() {
         });
       }
     }
-  } catch (err) {
-    console.error(err);
-  } finally {
-    if (AppDataSource.isInitialized) {
-      await AppDataSource.destroy();
-    }
-  }
-}
+  } 

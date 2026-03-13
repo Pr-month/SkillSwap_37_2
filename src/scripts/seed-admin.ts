@@ -7,10 +7,8 @@ import * as bcrypt from 'bcrypt';
 dotenv.config();
 
 export async function seedAdmin() {
-  await AppDataSource.initialize();
   const userRepo = AppDataSource.getRepository(User);
 
-  try {
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@admin.ru';
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin1234';
 
@@ -44,14 +42,4 @@ export async function seedAdmin() {
 
     await userRepo.save(adminData);
     console.log(`Администратор создан с email: ${adminEmail}`);
-  } finally {
-    await AppDataSource.destroy();
-  }
-}
-
-if (require.main === module) {
-  seedAdmin().catch((e: unknown) => {
-    console.error('Ошибка при сидинге Администратора:', e);
-    process.exit(1);
-  });
-}
+  } 

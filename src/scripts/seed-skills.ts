@@ -4,7 +4,6 @@ import { User } from '../users/entities/user.entity';
 import { Category } from '../categories/entities/category.entity';
 
 export async function seedSkills() {
-  await AppDataSource.initialize();
   const skillRepo = AppDataSource.getRepository(Skill);
   const userRepo = AppDataSource.getRepository(User);
   const categoryRepo = AppDataSource.getRepository(Category);
@@ -91,11 +90,4 @@ export async function seedSkills() {
 
   await skillRepo.save(testSkills);
   console.log(`Создано ${testSkills.length} тестовых навыков.`);
-
-  await AppDataSource.destroy();
 }
-
-seedSkills().catch((e) => {
-  console.error('Ошибка при сидинге навыков:', e);
-  process.exit(1);
-});
