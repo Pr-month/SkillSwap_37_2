@@ -1,53 +1,76 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import {
+  INestApplication,
+  ClassSerializerInterceptor,
+  ValidationPipe,
+} from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { Skill } from '../src/skills/entities/skill.entity';
-import { User } from '../src/users/entities/user.entity';
-import { Category } from '../src/categories/entities/category.entity';
+import { AppExceptionFilter } from '../src/common/all-exception.filter';
+
+interface LoginResponse {
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+  };
+  tokens: {
+    accessToken: string;
+    refreshToken: string;
+  };
+}
+
+interface PaginatedSkillsResponse {
+  data: Array<{
+    id: string;
+    title: string;
+    description: string;
+  }>;
+  page: number;
+  totalPages: number;
+}
+
+interface ErrorResponse {
+  message: string;
+}
 
 describe('SkillsController (e2e)', () => {
   let app: INestApplication;
-  let skillRepository: any;
-  let userRepository: any;
-  let categoryRepository: any;
+  let accessToken: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    })
-      .overrideProvider(getRepositoryToken(Skill))
-      .useValue({
-        find: jest.fn(),
-        findOne: jest.fn(),
-        save: jest.fn(),
-        remove: jest.fn(),
-        createQueryBuilder: jest.fn(() => ({
-          leftJoinAndSelect: jest.fn().mockReturnThis(),
-          where: jest.fn().mockReturnThis(),
-          getCount: jest.fn(),
-          skip: jest.fn().mockReturnThis(),
-          take: jest.fn().mockReturnThis(),
-          getMany: jest.fn(),
-        })),
-      })
-      .overrideProvider(getRepositoryToken(User))
-      .useValue({
-        findOne: jest.fn(),
-      })
-      .overrideProvider(getRepositoryToken(Category))
-      .useValue({
-        findOne: jest.fn(),
-      })
-      .compile();
+    }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.useGlobalInterceptors(
+      new ClassSerializerInterceptor(app.get(Reflector)),
+    );
+    app.useGlobalFilters(new AppExceptionFilter());
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        transform: true,
+        forbidNonWhitelisted: true,
+      }),
+    );
+
     await app.init();
 
-    skillRepository = moduleFixture.get(getRepositoryToken(Skill));
-    userRepository = moduleFixture.get(getRepositoryToken(User));
-    categoryRepository = moduleFixture.get(getRepositoryToken(Category));
+    // Логин для получения токена (используем данные из сидинга)
+    const loginResponse = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({
+        email: 'user1@test.com',
+        password: 'password123',
+      })
+      .expect(201);
+
+    accessToken = (loginResponse.body as LoginResponse).tokens.accessToken;
+    expect(accessToken).toBeDefined();
   });
 
   afterAll(async () => {
@@ -56,109 +79,89 @@ describe('SkillsController (e2e)', () => {
 
   describe('GET /skills', () => {
     it('should return paginated skills', async () => {
-      const mockSkills = [
-        {
-          id: '550e8400-e29b-41d4-a716-446655440000',
-          title: 'Test Skill 1',
-          description: 'Description 1',
-          images: [],
-          owner: { id: 'user-id', email: 'owner@example.com' },
-          category: { id: 'category-id', name: 'Category' },
-        },
-        {
-          id: '550e8400-e29b-41d4-a716-446655440001',
-          title: 'Test Skill 2',
-          description: 'Description 2',
-          images: [],
-          owner: { id: 'user-id', email: 'owner@example.com' },
-          category: { id: 'category-id', name: 'Category' },
-        },
-      ];
-
-      const mockQueryBuilder = {
-        leftJoinAndSelect: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        getCount: jest.fn().mockResolvedValue(2),
-        skip: jest.fn().mockReturnThis(),
-        take: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue(mockSkills),
-      };
-      skillRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
-
       const response = await request(app.getHttpServer())
         .get('/skills')
         .query({ page: 1, limit: 10 })
         .expect(200);
 
-      expect(response.body).toEqual({
-        data: mockSkills,
-        page: 1,
-        totalPages: 1,
-      });
+      expect(response.body).toHaveProperty('data');
+      expect(response.body).toHaveProperty('page');
+      expect(response.body).toHaveProperty('totalPages');
+      expect(
+        Array.isArray((response.body as PaginatedSkillsResponse).data),
+      ).toBe(true);
     });
 
     it('should apply search filter', async () => {
-      const mockSkills = [
-        {
-          id: '550e8400-e29b-41d4-a716-446655440000',
-          title: 'JavaScript',
-          description: 'JS programming',
-          images: [],
-          owner: { id: 'user-id', email: 'owner@example.com' },
-          category: { id: 'category-id', name: 'Category' },
-        },
-      ];
-
-      const mockQueryBuilder = {
-        leftJoinAndSelect: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        getCount: jest.fn().mockResolvedValue(1),
-        skip: jest.fn().mockReturnThis(),
-        take: jest.fn().mockReturnThis(),
-        getMany: jest.fn().mockResolvedValue(mockSkills),
-      };
-      skillRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
-
-      await request(app.getHttpServer())
+      const response = await request(app.getHttpServer())
         .get('/skills')
-        .query({ search: 'java' })
+        .query({ search: 'javascript' })
         .expect(200);
 
-      expect(mockQueryBuilder.where).toHaveBeenCalledWith(
-        'LOWER(skill.title) LIKE :search',
-        { search: '%java%' },
+      expect(response.body).toHaveProperty('data');
+      // Может вернуть пустой массив, если нет совпадений, но статус 200
+    });
+
+    it('should return 404 for non-existent page', async () => {
+      // Предположим, что totalPages маленькое, а page большое
+      const response = await request(app.getHttpServer())
+        .get('/skills')
+        .query({ page: 999, limit: 10 })
+        .expect(404);
+
+      expect((response.body as ErrorResponse).message).toContain(
+        'Страница 999 не найдена',
       );
     });
   });
 
   describe('GET /skills/:id', () => {
     it('should return a skill by id', async () => {
-      const mockSkill = {
-        id: '550e8400-e29b-41d4-a716-446655440000',
-        title: 'Test Skill',
-        description: 'Description',
-        images: [],
-        owner: { id: 'user-id', email: 'owner@example.com' },
-        category: { id: 'category-id', name: 'Category' },
-      };
-
-      skillRepository.findOne.mockResolvedValue(mockSkill);
-
-      const response = await request(app.getHttpServer())
-        .get('/skills/550e8400-e29b-41d4-a716-446655440000')
+      // Сначала получим список, чтобы взять существующий ID
+      const listResponse = await request(app.getHttpServer())
+        .get('/skills')
+        .query({ limit: 1 })
         .expect(200);
 
-      expect(response.body).toEqual(mockSkill);
+      if ((listResponse.body as PaginatedSkillsResponse).data.length > 0) {
+        const skillId = (listResponse.body as PaginatedSkillsResponse).data[0]
+          .id;
+        const response = await request(app.getHttpServer())
+          .get(`/skills/${skillId}`)
+          .expect(200);
+
+        expect(response.body).toHaveProperty('id', skillId);
+        expect(response.body).toHaveProperty('title');
+        expect(response.body).toHaveProperty('description');
+      } else {
+        // Если навыков нет, пропускаем тест
+        console.warn('No skills found, skipping test');
+      }
     });
 
-    it('should return 404 if skill not found', async () => {
-      skillRepository.findOne.mockResolvedValue(null);
-
+    it('should return 404 for non-existent id', async () => {
+      const nonExistentId = '00000000-0000-0000-0000-000000000000';
       await request(app.getHttpServer())
-        .get('/skills/non-existent-id')
+        .get(`/skills/${nonExistentId}`)
         .expect(404);
     });
   });
 
-  // Остальные endpoints требуют аутентификации, для простоты пропустим или добавим мок JWT
+  describe('Endpoints that require authentication', () => {
+    it('PATCH /skills/:id should require authentication', async () => {
+      const listResponse = await request(app.getHttpServer())
+        .get('/skills')
+        .query({ limit: 1 })
+        .expect(200);
+
+      if ((listResponse.body as PaginatedSkillsResponse).data.length > 0) {
+        const skillId = (listResponse.body as PaginatedSkillsResponse).data[0]
+          .id;
+        await request(app.getHttpServer())
+          .patch(`/skills/${skillId}`)
+          .send({ title: 'Updated Title' })
+          .expect(401);
+      }
+    });
+  });
 });

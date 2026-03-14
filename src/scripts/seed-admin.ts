@@ -1,3 +1,4 @@
+import { DataSource } from 'typeorm';
 import { AppDataSource } from '../config/db.config';
 import { User } from '../users/entities/user.entity';
 import { UserRole, UserGender } from '../users/users.enums';
@@ -6,11 +7,23 @@ import * as bcrypt from 'bcrypt';
 
 dotenv.config();
 
-export async function seedAdmin() {
-  await AppDataSource.initialize();
-  const userRepo = AppDataSource.getRepository(User);
+export async function seedAdmin(dataSource?: DataSource) {
+  let externalDataSource = false;
+  let ds: DataSource;
+
+  if (dataSource) {
+    ds = dataSource;
+    externalDataSource = true;
+  } else {
+    ds = AppDataSource;
+    if (!ds.isInitialized) {
+      await ds.initialize();
+    }
+  }
 
   try {
+    const userRepo = ds.getRepository(User);
+
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@admin.ru';
     const adminPassword = process.env.ADMIN_PASSWORD || 'admin1234';
 
@@ -45,7 +58,9 @@ export async function seedAdmin() {
     await userRepo.save(adminData);
     console.log(`Администратор создан с email: ${adminEmail}`);
   } finally {
-    await AppDataSource.destroy();
+    if (!externalDataSource && ds.isInitialized) {
+      await ds.destroy();
+    }
   }
 }
 

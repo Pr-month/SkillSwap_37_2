@@ -1,13 +1,25 @@
+import { DataSource } from 'typeorm';
 import { AppDataSource } from '../config/db.config';
 import { User } from '../users/entities/user.entity';
 import { UserRole, UserGender } from '../users/users.enums';
 import * as bcrypt from 'bcrypt';
 
-export async function seedUsers() {
-  await AppDataSource.initialize();
-  const userRepo = AppDataSource.getRepository(User);
+export async function seedUsers(dataSource?: DataSource) {
+  let externalDataSource = false;
+  let ds: DataSource;
+
+  if (dataSource) {
+    ds = dataSource;
+    externalDataSource = true;
+  } else {
+    ds = AppDataSource;
+    if (!ds.isInitialized) {
+      await ds.initialize();
+    }
+  }
 
   try {
+    const userRepo = ds.getRepository(User);
     const hashedPassword = await bcrypt.hash('password123', 10); // хеш для password123
 
     const testUsers = [
@@ -62,7 +74,9 @@ export async function seedUsers() {
 
     console.log('Сидинг тестовых пользователей завершён.');
   } finally {
-    await AppDataSource.destroy();
+    if (!externalDataSource && ds.isInitialized) {
+      await ds.destroy();
+    }
   }
 }
 
