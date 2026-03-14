@@ -18,6 +18,7 @@ import {
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
 import { GetSkillsQueryDto } from './dto/get-skills-query.dto';
+import { Skill } from './entities/skill.entity';
 
 // Response DTO with ApiProperty
 export class SkillResponse {
@@ -67,6 +68,17 @@ export class SkillResponse {
   owner: any;
 }
 
+export class SkillWithPaginationResponse {
+  @ApiProperty({ type: () => [Skill] })
+  data: Skill[];
+
+  @ApiProperty({ example: 1 })
+  page: number;
+
+  @ApiProperty({ example: 5 })
+  totalPages: number;
+}
+
 // Функции для декораторов
 
 export const ApiCreateSkill = () =>
@@ -75,7 +87,7 @@ export const ApiCreateSkill = () =>
     ApiBody({ type: CreateSkillDto }),
     ApiCreatedResponse({
       description: 'Навык успешно создан',
-      type: SkillResponse,
+      type: Skill,
     }),
     ApiBadRequestResponse({ description: 'Неверные данные запроса' }),
     ApiConflictResponse({
@@ -89,7 +101,7 @@ export const ApiFindAllSkills = () =>
     ApiQuery({ type: GetSkillsQueryDto }),
     ApiOkResponse({
       description: 'Список навыков',
-      type: [SkillResponse],
+      type: SkillWithPaginationResponse,
     }),
   );
 
@@ -104,7 +116,7 @@ export const ApiFindOneSkill = () =>
     }),
     ApiOkResponse({
       description: 'Навык найден',
-      type: SkillResponse,
+      type: Skill,
     }),
     ApiNotFoundResponse({ description: 'Навык не найден' }),
   );
@@ -122,7 +134,7 @@ export const ApiUpdateSkill = () =>
     ApiBody({ type: UpdateSkillDto }),
     ApiOkResponse({
       description: 'Навык обновлен',
-      type: SkillResponse,
+      type: Skill,
     }),
     ApiNotFoundResponse({ description: 'Навык не найден' }),
     ApiBadRequestResponse({ description: 'Неверные данные запроса' }),
