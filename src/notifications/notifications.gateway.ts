@@ -8,6 +8,7 @@ import {
 } from '@nestjs/websockets';
 
 import { Server, Socket } from 'socket.io';
+import { WsJwtGuard } from 'src/auth/guards/ws-gwt-acces.guard';
 import { appConfig, IConfig } from 'src/config/app.config';
 
 
@@ -44,6 +45,7 @@ export class NotificationsGateway{
   }
 
   @SubscribeMessage('register')
+  @UseGuards(WsJwtGuard)
   handleRegister(
     @MessageBody() userId: string,
     @ConnectedSocket() client: Socket
