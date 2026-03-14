@@ -85,7 +85,12 @@ export class RequestsService {
       requestedSkill: { id: requestedSkillId },
     });
 
-    return await this.requestRepository.save(request);
+    const savedSkill =  await this.requestRepository.save(request);
+
+    this.notificationsService.notifyUserRequestStatus(receiverId, requestedSkillId, RequestStatus.PENDING)
+    
+    return savedSkill;
+
   }
 
   async update(userId: string, id: string, updateRequestDto: UpdateRequestDto) {
@@ -116,10 +121,7 @@ export class RequestsService {
     
     this.notificationsService.notifyUserRequestStatus(userId, id, updateRequestDto.status)
 
-
     return await this.requestRepository.save(request);
-
-
   }
 
   async findIncoming(userId: string) {

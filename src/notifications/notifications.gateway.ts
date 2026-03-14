@@ -11,8 +11,10 @@ import { Server, Socket } from 'socket.io';
 import { WsJwtGuard } from 'src/auth/guards/ws-gwt-acces.guard';
 import { appConfig, IConfig } from 'src/config/app.config';
 
+const NOTIFICATIONS_PORT = Number(process.env.PORT_NOTIFICATIONS) || 4001;
 
-@WebSocketGateway({
+
+@WebSocketGateway(NOTIFICATIONS_PORT, {
   namespace: 'notifications',
 })
 export class NotificationsGateway{
@@ -50,25 +52,16 @@ export class NotificationsGateway{
     @MessageBody() userId: string,
     @ConnectedSocket() client: Socket
   ): void {
-    const sockets = this.userSockets.get(userId) || [];
-    sockets.push(client.id);
-    this.userSockets.set(userId, sockets);
-    
-    console.log(`User ${userId} registered with socket ${client.id}`);
+    client.join(userId);
   }
 
   @SubscribeMessage('disconnect')
-  handleDisconnect(@ConnectedSocket() client: Socket): void {
-    for (const [userId, sockets] of this.userSockets.entries()) {
-      const index = sockets.indexOf(client.id);
-      if (index !== -1) {
-        sockets.splice(index, 1);
-        if (sockets.length === 0) {
-          this.userSockets.delete(userId);
-        }
-        break;
-      }
-    }
+  @UseGuards(WsJwtGuard)
+  handleDisconnect(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() userId: string,
+): void {
+      client.leave(userId);
   }
 
   @SubscribeMessage('notification')
