@@ -36,9 +36,9 @@ export class SkillsController {
   ) {}
 
   @Post()
-  @ApiCreateSkill()
-  create(@Body() createSkillDto: CreateSkillDto) {
-    return this.skillsService.create(createSkillDto);
+  @UseGuards(JwtAccessGuard)
+  create(@Body() createSkillDto: CreateSkillDto, @Request() req: TAuthRequest) {
+    return this.skillsService.create(createSkillDto, req.user.sub);
   }
 
   @Get()
