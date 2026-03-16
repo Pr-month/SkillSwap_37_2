@@ -1,13 +1,9 @@
-import {
-  ConflictException,
-  Inject,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { LoginAuthDto } from './dto/login-auth.dto';
+import { UserFromRefreshToken } from './auth.types';
 import * as bcrypt from 'bcrypt';
 import { ConfigType } from '@nestjs/config';
 import { jwtConfig } from '../config/jwt.config';
@@ -44,14 +40,6 @@ export class AuthService {
   }
 
   async register(createAuthDto: CreateAuthDto) {
-    const existingUser = await this.usersService.findByEmail(
-      createAuthDto.email,
-    );
-
-    if (existingUser) {
-      throw new ConflictException('Пользователь с таким email уже существует');
-    }
-
     const hashedPassword = await bcrypt.hash(createAuthDto.password, 10);
 
     const user = await this.usersService.createFromAuth({
@@ -103,7 +91,14 @@ export class AuthService {
     };
   }
 
-  async refresh(user: { id: string; email: string; role: string }) {
+  async refresh(user: UserFromRefreshToken) {
+    const isValid = await this.usersService.verifyRefreshToken(
+      user.id,
+      user.refreshToken,
+    );
+    if (!isValid) {
+      throw new UnauthorizedException('Недействительный refresh токен');
+    }
     const tokens = await this.getTokens(user);
     return { tokens };
   }

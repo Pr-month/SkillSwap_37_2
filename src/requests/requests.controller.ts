@@ -42,4 +42,12 @@ export class RequestsController {
   async getOutgoing(@Request() request: TAuthRequest) {
     return this.requestsService.findOutgoing(request.user.sub);
   }
+
+  @Delete('/:id')
+  async deleteRequest(
+    @Request() request: TAuthRequest,
+    @Param("id") id: string
+  ) {
+    return this.requestsService.delete(request.user, id);
+  }
 }

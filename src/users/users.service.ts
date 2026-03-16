@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  ForbiddenException,
   Inject,
   Injectable,
   NotFoundException,
@@ -21,7 +20,7 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
-    @InjectRepository(User)
+    @InjectRepository(Skill)
     private readonly skillRepository: Repository<Skill>,
     @Inject(appConfig.KEY)
     private readonly config: IConfig,
@@ -142,7 +141,7 @@ export class UsersService {
   }
 
   async clearRefreshToken(userId: string): Promise<void> {
-    await this.usersRepository.update(userId, { refreshToken: '' as string });
+    await this.usersRepository.update(userId, { refreshToken: '' });
   }
 
   async updateRefreshToken(userId: string, refreshToken: string) {
@@ -151,23 +150,31 @@ export class UsersService {
     });
   }
 
+  async verifyRefreshToken(
+    userId: string,
+    refreshToken: string,
+  ): Promise<boolean> {
+    const user = await this.usersRepository.findOneBy({ id: userId });
+    if (!user || !user.refreshToken) {
+      return false;
+    }
+    return bcrypt.compare(refreshToken, user.refreshToken);
+  }
+
   async removeFavorite(id: string, userId: string) {
     const user = await this.usersRepository.findOneBy({ id: userId });
     if (!user) throw new NotFoundException('Пользователь не найден');
     if (!user.favoriteSkills)
       throw new NotFoundException('Список избранного пуст');
 
-    const deletedSkill = user.favoriteSkills.filter((skill) => skill.id === id);
-
-    if (deletedSkill.length === 0) {
+    const skillIndex = user.favoriteSkills.findIndex(
+      (skill) => skill.id === id,
+    );
+    if (skillIndex === -1) {
       throw new NotFoundException(`Навык с id ${id} не найден в избранном`);
     }
 
-    const updatedSkills = user.favoriteSkills.filter(
-      (skill) => skill.id !== id,
-    );
-
-    Object.assign(user.favoriteSkills, updatedSkills);
+    user.favoriteSkills.splice(skillIndex, 1);
     return this.usersRepository.save(user);
   }
 
@@ -175,30 +182,22 @@ export class UsersService {
     const user = await this.usersRepository.findOneBy({ id: userId });
     if (!user) throw new NotFoundException('Пользователь не найден');
 
-    if (user.favoriteSkills) {
-      const newFavoriteSkill = user.favoriteSkills.filter(
-        (skill) => skill.id === id,
-      );
-
-      if (newFavoriteSkill.length !== 0) {
-        throw new NotFoundException(
-          `Навык с id ${id} присутствует в избранном`,
-        );
-      }
+    // Проверяем, есть ли уже навык в избранном
+    if (user.favoriteSkills?.some((skill) => skill.id === id)) {
+      throw new NotFoundException(`Навык с id ${id} присутствует в избранном`);
     }
-    //find skill by id
-    const skill = await this.skillRepository.findOneBy({ id: id });
 
+    // Находим навык
+    const skill = await this.skillRepository.findOneBy({ id });
     if (!skill) throw new NotFoundException(`Навык с id ${id} не найден`);
 
-    //insert
-    const updatedSkills = user.favoriteSkills;
+    // Инициализируем массив, если его нет
+    if (!user.favoriteSkills) {
+      user.favoriteSkills = [];
+    }
 
-    if (updatedSkills) updatedSkills.push(skill);
-
-    if (user.favoriteSkills) Object.assign(user.favoriteSkills, updatedSkills);
-    else user.favoriteSkills = updatedSkills;
-
+    // Добавляем навык
+    user.favoriteSkills.push(skill);
     return this.usersRepository.save(user);
   }
 }
