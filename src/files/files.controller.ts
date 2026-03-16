@@ -19,6 +19,7 @@ import {
 } from './files.validator';
 import { FileCleanupInterceptor } from './files.cleanup.interceptor';
 import { UPLOAD_ERROR } from './files.errors';
+import { ApiUploadFile } from './files.swagger';
 
 /* Полагаю, что это нужно вывести в общий конфиг */
 export const ALLOWED_IMAGE_TYPES = [
@@ -42,6 +43,7 @@ export class FilesController {
       }),
     }),
   )
+  @ApiUploadFile()
   async uploadImage(
     @UploadedFile(
       new ParseFilePipe({
