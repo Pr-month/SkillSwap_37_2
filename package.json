@@ -17,8 +17,9 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
-    "seed": "dotenv -e .env -- ts-node -r tsconfig-paths/register src/scripts/seeder.ts"
+    "test:e2e": "npm run seed:test && jest --config ./test/jest-e2e.json",
+    "seed": "dotenv -e .env -- ts-node -r tsconfig-paths/register src/scripts/seeder.ts",
+    "seed:test": "dotenv -e .env.test.local -- ts-node -r tsconfig-paths/register src/scripts/seeder-test.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -57,6 +58,7 @@
     "@types/node": "^22.10.7",
     "@types/passport-jwt": "^4.0.1",
     "@types/supertest": "^6.0.2",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
