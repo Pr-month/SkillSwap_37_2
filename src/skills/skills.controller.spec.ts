@@ -129,7 +129,11 @@ describe('SkillsController', () => {
       const expectedSkill = { id: skillId, ...updateSkillDto };
       mockSkillsService.update.mockResolvedValue(expectedSkill);
 
-      const result = await controller.update(skillId, updateSkillDto, mockRequest);
+      const result = await controller.update(
+        skillId,
+        updateSkillDto,
+        mockRequest,
+      );
 
       expect(skillsService.update).toHaveBeenCalledWith(
         skillId,
@@ -144,7 +148,9 @@ describe('SkillsController', () => {
     it('should remove a skill', async () => {
       const skillId = 'skill-id';
       mockSkillsService.findOneAndCheckOwner.mockResolvedValue(true);
-      mockSkillsService.remove.mockReturnValue(`This action removes a #${skillId} skill`);
+      mockSkillsService.remove.mockReturnValue(
+        `This action removes a #${skillId} skill`,
+      );
 
       const result = await controller.remove(skillId, mockRequest);
 
@@ -165,7 +171,10 @@ describe('SkillsController', () => {
 
       const result = await controller.addFavorite(skillId, mockRequest);
 
-      expect(usersService.addFavorite).toHaveBeenCalledWith(skillId, mockRequest.user.sub);
+      expect(usersService.addFavorite).toHaveBeenCalledWith(
+        skillId,
+        mockRequest.user.sub,
+      );
       expect(result).toEqual(expectedResult);
     });
   });
@@ -178,7 +187,10 @@ describe('SkillsController', () => {
 
       const result = await controller.removeFavorite(skillId, mockRequest);
 
-      expect(usersService.removeFavorite).toHaveBeenCalledWith(skillId, mockRequest.user.sub);
+      expect(usersService.removeFavorite).toHaveBeenCalledWith(
+        skillId,
+        mockRequest.user.sub,
+      );
       expect(result).toEqual(expectedResult);
     });
   });

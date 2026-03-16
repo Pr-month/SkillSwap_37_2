@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { SkillsService } from './skills.service';
 import { Skill } from './entities/skill.entity';
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
@@ -7,20 +8,48 @@ import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
 import { GetSkillsQueryDto } from './dto/get-skills-query.dto';
 import { JwtPayload } from '../auth/auth.types';
-import { UserRole } from '../users/users.enums';
+import { UserRole, UserGender } from '../users/users.enums';
+import { Category } from '../categories/entities/category.entity';
+import { User } from '../users/entities/user.entity';
+
+/* eslint-disable @typescript-eslint/unbound-method */
 
 describe('SkillsService', () => {
   let service: SkillsService;
-  let mockRepository: any;
+  let mockRepository: jest.Mocked<Repository<Skill>>;
 
-  const mockSkill = {
+  const mockCategory: Category = {
+    id: 'category-id',
+    name: 'Category',
+    parent: null,
+    children: [],
+  };
+
+  const mockOwner: User = {
+    id: 'user-id',
+    email: 'owner@example.com',
+    name: 'Owner',
+    password: 'hashed',
+    role: UserRole.USER,
+    about: '',
+    birthdate: new Date(),
+    city: '',
+    gender: UserGender.MALE,
+    avatar: '',
+    refreshToken: '',
+    skills: [],
+    favoriteSkills: [],
+    requests: [],
+  } as User;
+
+  const mockSkill: Skill = {
     id: '550e8400-e29b-41d4-a716-446655440000',
     title: 'Test Skill',
     description: 'Test Description',
-    category: { id: 'category-id' },
-    owner: { id: 'user-id', email: 'owner@example.com' },
+    category: mockCategory,
+    owner: mockOwner,
     images: [],
-  };
+  } as Skill;
 
   const mockUser: JwtPayload = {
     sub: 'user-id',
@@ -29,21 +58,23 @@ describe('SkillsService', () => {
   };
 
   beforeEach(async () => {
+    const mockQueryBuilder = {
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      getCount: jest.fn(),
+      skip: jest.fn().mockReturnThis(),
+      take: jest.fn().mockReturnThis(),
+      getMany: jest.fn(),
+    };
+
     mockRepository = {
       create: jest.fn(),
       save: jest.fn(),
-      createQueryBuilder: jest.fn(() => ({
-        leftJoinAndSelect: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        getCount: jest.fn(),
-        skip: jest.fn().mockReturnThis(),
-        take: jest.fn().mockReturnThis(),
-        getMany: jest.fn(),
-      })),
+      createQueryBuilder: jest.fn(() => mockQueryBuilder),
       findOne: jest.fn(),
       findOneBy: jest.fn(),
       remove: jest.fn(),
-    };
+    } as unknown as jest.Mocked<Repository<Skill>>;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -72,7 +103,11 @@ describe('SkillsService', () => {
         images: [],
       };
 
-      const expectedSkill = { ...mockSkill, ...createSkillDto };
+      const expectedSkill = {
+        ...mockSkill,
+        title: createSkillDto.title,
+        description: createSkillDto.description,
+      };
       mockRepository.create.mockReturnValue(expectedSkill);
       mockRepository.save.mockResolvedValue(expectedSkill);
 
@@ -102,12 +137,17 @@ describe('SkillsService', () => {
         take: jest.fn().mockReturnThis(),
         getMany: jest.fn().mockResolvedValue(mockSkills),
       };
-      mockRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+      mockRepository.createQueryBuilder.mockReturnValue(
+        mockQueryBuilder as any,
+      );
 
       const result = await service.findAll(query);
 
       expect(mockRepository.createQueryBuilder).toHaveBeenCalledWith('skill');
-      expect(mockQueryBuilder.leftJoinAndSelect).toHaveBeenCalledWith('skill.owner', 'owner');
+      expect(mockQueryBuilder.leftJoinAndSelect).toHaveBeenCalledWith(
+        'skill.owner',
+        'owner',
+      );
       expect(mockQueryBuilder.getCount).toHaveBeenCalled();
       expect(mockQueryBuilder.skip).toHaveBeenCalledWith(0);
       expect(mockQueryBuilder.take).toHaveBeenCalledWith(10);
@@ -131,13 +171,16 @@ describe('SkillsService', () => {
         take: jest.fn().mockReturnThis(),
         getMany: jest.fn().mockResolvedValue(mockSkills),
       };
-      mockRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+      mockRepository.createQueryBuilder.mockReturnValue(
+        mockQueryBuilder as any,
+      );
 
       await service.findAll(query);
 
-      expect(mockQueryBuilder.where).toHaveBeenCalledWith('LOWER(skill.title) LIKE :search', {
-        search: '%test%',
-      });
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith(
+        'LOWER(skill.title) LIKE :search',
+        { search: '%test%' },
+      );
     });
 
     it('should throw NotFoundException if page exceeds total pages', async () => {
@@ -152,7 +195,9 @@ describe('SkillsService', () => {
         take: jest.fn().mockReturnThis(),
         getMany: jest.fn(),
       };
-      mockRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+      mockRepository.createQueryBuilder.mockReturnValue(
+        mockQueryBuilder as any,
+      );
 
       await expect(service.findAll(query)).rejects.toThrow(NotFoundException);
     });
@@ -174,7 +219,9 @@ describe('SkillsService', () => {
     it('should throw NotFoundException if skill not found', async () => {
       mockRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.findOne('non-existent-id')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('non-existent-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -190,19 +237,21 @@ describe('SkillsService', () => {
     it('should throw NotFoundException if skill not found', async () => {
       mockRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.findOneAndCheckOwner('non-existent-id', mockUser))
-        .rejects.toThrow(NotFoundException);
+      await expect(
+        service.findOneAndCheckOwner('non-existent-id', mockUser),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw ForbiddenException if user is not owner', async () => {
       const differentOwnerSkill = {
         ...mockSkill,
-        owner: { id: 'other-id', email: 'other@example.com' },
+        owner: { ...mockOwner, id: 'other-id', email: 'other@example.com' },
       };
-      mockRepository.findOne.mockResolvedValue(differentOwnerSkill);
+      mockRepository.findOne.mockResolvedValue(differentOwnerSkill as Skill);
 
-      await expect(service.findOneAndCheckOwner(mockSkill.id, mockUser))
-        .rejects.toThrow(ForbiddenException);
+      await expect(
+        service.findOneAndCheckOwner(mockSkill.id, mockUser),
+      ).rejects.toThrow(ForbiddenException);
     });
   });
 
@@ -211,14 +260,18 @@ describe('SkillsService', () => {
       const updateSkillDto: UpdateSkillDto = { title: 'Updated Title' };
       const skillWithOwner = {
         ...mockSkill,
-        owner: { id: 'user-id' },
+        owner: { ...mockOwner, id: 'user-id' },
       };
       const updatedSkill = { ...skillWithOwner, ...updateSkillDto };
 
-      mockRepository.findOne.mockResolvedValue(skillWithOwner);
-      mockRepository.save.mockResolvedValue(updatedSkill);
+      mockRepository.findOne.mockResolvedValue(skillWithOwner as Skill);
+      mockRepository.save.mockResolvedValue(updatedSkill as Skill);
 
-      const result = await service.update(mockSkill.id, updateSkillDto, 'user-id');
+      const result = await service.update(
+        mockSkill.id,
+        updateSkillDto,
+        'user-id',
+      );
 
       expect(mockRepository.findOne).toHaveBeenCalledWith({
         where: { id: mockSkill.id },
@@ -231,19 +284,21 @@ describe('SkillsService', () => {
     it('should throw NotFoundException if skill not found', async () => {
       mockRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.update('non-existent-id', {}, 'user-id'))
-        .rejects.toThrow(NotFoundException);
+      await expect(
+        service.update('non-existent-id', {}, 'user-id'),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw ForbiddenException if user is not owner', async () => {
       const skillWithOtherOwner = {
         ...mockSkill,
-        owner: { id: 'other-id' },
+        owner: { ...mockOwner, id: 'other-id' },
       };
-      mockRepository.findOne.mockResolvedValue(skillWithOtherOwner);
+      mockRepository.findOne.mockResolvedValue(skillWithOtherOwner as Skill);
 
-      await expect(service.update(mockSkill.id, {}, 'user-id'))
-        .rejects.toThrow(ForbiddenException);
+      await expect(service.update(mockSkill.id, {}, 'user-id')).rejects.toThrow(
+        ForbiddenException,
+      );
     });
   });
 
