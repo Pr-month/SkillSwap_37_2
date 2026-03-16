@@ -24,7 +24,13 @@ export class SkillsService {
       category: { id: createSkillDto.category },
       owner: { id: createSkillDto.owner },
     });
-    return await this.skillsRepository.save(skill);
+
+    const savedSkill = await this.skillsRepository.save(skill);
+
+    return await this.skillsRepository.findOne({
+      where: { id: savedSkill.id },
+      relations: ['owner']
+    });
   }
 
   async findAll(query: GetSkillsQueryDto) {

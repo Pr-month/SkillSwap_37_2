@@ -15,6 +15,7 @@ import { RequestStatus } from './requests.enums';
 import { UpdateRequestDto } from './dto/update-request.dto';
 import { UserRole } from '../users/users.enums';
 import { NotificationsService } from 'src/notifications/notifications.service';
+import { JwtPayload } from 'src/auth/auth.types';
 
 @Injectable()
 export class RequestsService {
@@ -123,6 +124,28 @@ export class RequestsService {
 
     return await this.requestRepository.save(request);
   }
+
+
+  async delete(user: JwtPayload, deletedId: string) {
+    const request = await this.requestRepository.findOne({ where: { id: deletedId } });
+
+    if (!request) {
+      throw new NotFoundException('Заявка не найдена');
+    }
+
+    /* Проверим, что статус изменяет получатель или админ */
+    if (
+      user.role !== UserRole.ADMIN &&
+      request.sender.id !== user.sub
+    ) {
+      throw new ForbiddenException(
+        'Заявку может удалить администратор или отправитель',
+      );
+    }
+
+    return await this.requestRepository.delete({ id: deletedId });
+  }
+
 
   async findIncoming(userId: string) {
     return this.requestRepository.find({
