@@ -9,7 +9,6 @@ import {
   UseGuards,
   Request,
   Query,
-  ForbiddenException,
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { SkillsService } from './skills.service';
@@ -28,8 +27,9 @@ export class SkillsController {
   ) {}
 
   @Post()
-  create(@Body() createSkillDto: CreateSkillDto) {
-    return this.skillsService.create(createSkillDto);
+  @UseGuards(JwtAccessGuard)
+  create(@Body() createSkillDto: CreateSkillDto, @Request() req: TAuthRequest) {
+    return this.skillsService.create(createSkillDto, req.user.sub);
   }
 
   @Get()

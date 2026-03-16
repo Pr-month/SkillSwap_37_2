@@ -18,18 +18,18 @@ export class SkillsService {
     private readonly skillsRepository: Repository<Skill>,
   ) {}
 
-  async create(createSkillDto: CreateSkillDto) {
+  async create(createSkillDto: CreateSkillDto, ownerId: string) {
     const skill = this.skillsRepository.create({
       ...createSkillDto,
       category: { id: createSkillDto.category },
-      owner: { id: createSkillDto.owner },
+      owner: { id: ownerId },
     });
 
     const savedSkill = await this.skillsRepository.save(skill);
 
     return await this.skillsRepository.findOne({
       where: { id: savedSkill.id },
-      relations: ['owner']
+      relations: ['owner'],
     });
   }
 
