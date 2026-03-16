@@ -16,6 +16,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { RequestsModule } from './requests/requests.module';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './auth/guards/roles.guard';
+import { CitiesModule } from './cities/cities.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { RolesGuard } from './auth/guards/roles.guard';
     SkillsModule,
     CategoriesModule,
     RequestsModule,
+    CitiesModule,
   ],
   controllers: [AppController, FilesController],
   providers: [

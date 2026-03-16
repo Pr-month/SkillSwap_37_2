@@ -9,7 +9,6 @@ import {
   UseGuards,
   Request,
   Query,
-  ForbiddenException,
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { SkillsService } from './skills.service';
@@ -19,6 +18,15 @@ import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
 import { TAuthRequest } from '../auth/auth.types';
 import { GetSkillsQueryDto } from './dto/get-skills-query.dto';
 import { UsersService } from 'src/users/users.service';
+import {
+  ApiCreateSkill,
+  ApiFindAllSkills,
+  ApiFindOneSkill,
+  ApiUpdateSkill,
+  ApiDeleteSkill,
+  ApiAddFavoriteSkill,
+  ApiRemoveFavoriteSkill,
+} from './skills.swagger';
 
 @Controller('skills')
 export class SkillsController {
@@ -28,22 +36,26 @@ export class SkillsController {
   ) {}
 
   @Post()
+  @ApiCreateSkill()
   create(@Body() createSkillDto: CreateSkillDto) {
     return this.skillsService.create(createSkillDto);
   }
 
   @Get()
+  @ApiFindAllSkills()
   findAll(@Query() query: GetSkillsQueryDto) {
     return this.skillsService.findAll(query);
   }
 
   @Get(':id')
+  @ApiFindOneSkill()
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.skillsService.findOne(id);
   }
 
   @UseGuards(JwtAccessGuard)
   @Patch(':id')
+  @ApiUpdateSkill()
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateSkillDto: UpdateSkillDto,
@@ -54,6 +66,7 @@ export class SkillsController {
 
   @Delete(':id')
   @UseGuards(JwtAccessGuard)
+  @ApiDeleteSkill()
   async remove(
     @Param('id', ParseUUIDPipe) id: string,
     @Request() req: TAuthRequest,
@@ -64,6 +77,7 @@ export class SkillsController {
 
   @Post(':id/favorite')
   @UseGuards(JwtAccessGuard)
+  @ApiAddFavoriteSkill()
   addFavorite(
     @Param('id', ParseUUIDPipe) id: string,
     @Request() req: TAuthRequest,
@@ -73,6 +87,7 @@ export class SkillsController {
 
   @Delete(':id/favorite')
   @UseGuards(JwtAccessGuard)
+  @ApiRemoveFavoriteSkill()
   removeFavorite(
     @Param('id', ParseUUIDPipe) id: string,
     @Request() req: TAuthRequest,
