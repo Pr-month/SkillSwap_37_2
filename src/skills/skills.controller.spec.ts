@@ -17,8 +17,6 @@ jest.mock('../users/users.service', () => ({
 
 describe('SkillsController', () => {
   let controller: SkillsController;
-  let skillsService: SkillsService;
-  let usersService: UsersService;
 
   const mockSkillsService = {
     create: jest.fn(),
@@ -61,8 +59,6 @@ describe('SkillsController', () => {
       .compile();
 
     controller = module.get<SkillsController>(SkillsController);
-    skillsService = module.get<SkillsService>(SkillsService);
-    usersService = module.get<UsersService>(UsersService);
   });
 
   afterEach(() => {
@@ -79,15 +75,21 @@ describe('SkillsController', () => {
         title: 'New Skill',
         description: 'Description',
         category: 'category-id',
-        owner: 'user-id',
         images: [],
       };
-      const expectedResult = { id: 'skill-id', ...createSkillDto };
+      const expectedResult = {
+        id: 'skill-id',
+        ...createSkillDto,
+        owner: { id: 'user-id' },
+      };
       mockSkillsService.create.mockResolvedValue(expectedResult);
 
-      const result = await controller.create(createSkillDto);
+      const result = await controller.create(createSkillDto, mockRequest);
 
-      expect(skillsService.create).toHaveBeenCalledWith(createSkillDto);
+      expect(mockSkillsService.create).toHaveBeenCalledWith(
+        createSkillDto,
+        mockRequest.user.sub,
+      );
       expect(result).toEqual(expectedResult);
     });
   });
@@ -104,7 +106,7 @@ describe('SkillsController', () => {
 
       const result = await controller.findAll(query);
 
-      expect(skillsService.findAll).toHaveBeenCalledWith(query);
+      expect(mockSkillsService.findAll).toHaveBeenCalledWith(query);
       expect(result).toEqual(expectedResult);
     });
   });
@@ -117,7 +119,7 @@ describe('SkillsController', () => {
 
       const result = await controller.findOne(skillId);
 
-      expect(skillsService.findOne).toHaveBeenCalledWith(skillId);
+      expect(mockSkillsService.findOne).toHaveBeenCalledWith(skillId);
       expect(result).toEqual(expectedSkill);
     });
   });
@@ -135,7 +137,7 @@ describe('SkillsController', () => {
         mockRequest,
       );
 
-      expect(skillsService.update).toHaveBeenCalledWith(
+      expect(mockSkillsService.update).toHaveBeenCalledWith(
         skillId,
         updateSkillDto,
         mockRequest.user.sub,
@@ -154,11 +156,11 @@ describe('SkillsController', () => {
 
       const result = await controller.remove(skillId, mockRequest);
 
-      expect(skillsService.findOneAndCheckOwner).toHaveBeenCalledWith(
+      expect(mockSkillsService.findOneAndCheckOwner).toHaveBeenCalledWith(
         skillId,
         mockRequest.user,
       );
-      expect(skillsService.remove).toHaveBeenCalledWith(skillId);
+      expect(mockSkillsService.remove).toHaveBeenCalledWith(skillId);
       expect(result).toBe(`This action removes a #${skillId} skill`);
     });
   });
@@ -171,7 +173,7 @@ describe('SkillsController', () => {
 
       const result = await controller.addFavorite(skillId, mockRequest);
 
-      expect(usersService.addFavorite).toHaveBeenCalledWith(
+      expect(mockUsersService.addFavorite).toHaveBeenCalledWith(
         skillId,
         mockRequest.user.sub,
       );
@@ -187,7 +189,7 @@ describe('SkillsController', () => {
 
       const result = await controller.removeFavorite(skillId, mockRequest);
 
-      expect(usersService.removeFavorite).toHaveBeenCalledWith(
+      expect(mockUsersService.removeFavorite).toHaveBeenCalledWith(
         skillId,
         mockRequest.user.sub,
       );

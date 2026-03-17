@@ -84,6 +84,7 @@ export class SkillWithPaginationResponse {
 export const ApiCreateSkill = () =>
   applyDecorators(
     ApiOperation({ summary: 'Создать новый навык' }),
+    ApiBearerAuth(),
     ApiBody({ type: CreateSkillDto }),
     ApiCreatedResponse({
       description: 'Навык успешно создан',
@@ -93,6 +94,7 @@ export const ApiCreateSkill = () =>
     ApiConflictResponse({
       description: 'Навык с таким названием уже существует',
     }),
+    ApiUnauthorizedResponse({ description: 'Пользователь не авторизован' }),
   );
 
 export const ApiFindAllSkills = () =>
