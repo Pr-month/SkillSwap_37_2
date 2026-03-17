@@ -25,6 +25,8 @@ import {
   ApiUpdateUser,
   ApiDeleteUser,
 } from './users.swagger';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { UserRole } from './users.enums';
 
 @ApiTags('Users')
 @Controller('users')
@@ -71,6 +73,8 @@ export class UsersController {
 
   @ApiDeleteUser()
   @Delete(':id')
+  @Roles(UserRole.ADMIN)
+  @UseGuards(JwtAccessGuard)
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.usersService.remove(id);
   }
