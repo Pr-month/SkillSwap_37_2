@@ -1,4 +1,3 @@
-// src/auth/guards/jwt-access.guard.spec.ts
 import { ExecutionContext } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { JwtAccessGuard } from './jwt-access.guard';
