@@ -11,8 +11,10 @@ import { Server, Socket } from 'socket.io';
 import { WsJwtGuard } from 'src/auth/guards/ws-gwt-acces.guard';
 import { appConfig, IConfig } from 'src/config/app.config';
 
-const NOTIFICATIONS_PORT = Number(process.env.PORT_NOTIFICATIONS) || 4001;
-
+const NOTIFICATIONS_PORT =
+  process.env.PORT_NOTIFICATIONS !== undefined
+    ? Number(process.env.PORT_NOTIFICATIONS)
+    : 0;
 
 @WebSocketGateway(NOTIFICATIONS_PORT, {
   namespace: 'notifications',
