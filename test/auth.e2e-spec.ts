@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import * as request from 'supertest';
+import * as http from 'http';
 import { AppModule } from '../src/app.module';
 import { AppExceptionFilter } from '../src/common/all-exception.filter';
 
@@ -36,6 +37,7 @@ interface LogoutResponse {
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
+  let server: http.Server;
   let accessToken: string;
   let refreshToken: string;
 
@@ -58,6 +60,7 @@ describe('AuthController (e2e)', () => {
     );
 
     await app.init();
+    server = app.getHttpServer() as http.Server;
   });
 
   afterAll(async () => {
@@ -67,7 +70,7 @@ describe('AuthController (e2e)', () => {
   describe('POST /auth/register', () => {
     it('should register a new user', async () => {
       const uniqueEmail = `test${Date.now()}@example.com`;
-      const response = await request(app.getHttpServer())
+      const response = await request(server)
         .post('/auth/register')
         .send({
           name: 'Test User',
@@ -93,7 +96,7 @@ describe('AuthController (e2e)', () => {
     });
 
     it('should fail with invalid data', async () => {
-      await request(app.getHttpServer())
+      await request(server)
         .post('/auth/register')
         .send({
           name: '', // invalid
@@ -105,7 +108,7 @@ describe('AuthController (e2e)', () => {
 
     it('should fail if email already exists', async () => {
       // Используем email, который уже существует в сидинге
-      await request(app.getHttpServer())
+      await request(server)
         .post('/auth/register')
         .send({
           name: 'Duplicate User',
@@ -123,7 +126,7 @@ describe('AuthController (e2e)', () => {
 
   describe('POST /auth/login', () => {
     it('should login with correct credentials', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await request(server)
         .post('/auth/login')
         .send({
           email: 'user1@test.com',
@@ -142,7 +145,7 @@ describe('AuthController (e2e)', () => {
     });
 
     it('should fail with wrong password', async () => {
-      await request(app.getHttpServer())
+      await request(server)
         .post('/auth/login')
         .send({
           email: 'user1@test.com',
@@ -152,7 +155,7 @@ describe('AuthController (e2e)', () => {
     });
 
     it('should fail with non-existent email', async () => {
-      await request(app.getHttpServer())
+      await request(server)
         .post('/auth/login')
         .send({
           email: 'nonexistent@example.com',
@@ -165,7 +168,7 @@ describe('AuthController (e2e)', () => {
   describe('POST /auth/refresh', () => {
     it('should refresh tokens with valid refresh token', async () => {
       // Предполагаем, что refreshToken получен из предыдущего логина
-      const response = await request(app.getHttpServer())
+      const response = await request(server)
         .post('/auth/refresh')
         .set('Authorization', `Bearer ${refreshToken}`)
         .expect(201);
@@ -180,11 +183,11 @@ describe('AuthController (e2e)', () => {
     });
 
     it('should fail without refresh token', async () => {
-      await request(app.getHttpServer()).post('/auth/refresh').expect(401);
+      await request(server).post('/auth/refresh').expect(401);
     });
 
     it('should fail with invalid refresh token', async () => {
-      await request(app.getHttpServer())
+      await request(server)
         .post('/auth/refresh')
         .set('Authorization', 'Bearer invalidtoken')
         .expect(401);
@@ -193,7 +196,7 @@ describe('AuthController (e2e)', () => {
 
   describe('POST /auth/logout', () => {
     it('should logout with valid access token', async () => {
-      await request(app.getHttpServer())
+      await request(server)
         .post('/auth/logout')
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(201)
@@ -205,11 +208,11 @@ describe('AuthController (e2e)', () => {
     });
 
     it('should fail without access token', async () => {
-      await request(app.getHttpServer()).post('/auth/logout').expect(401);
+      await request(server).post('/auth/logout').expect(401);
     });
 
     it('should fail with invalid access token', async () => {
-      await request(app.getHttpServer())
+      await request(server)
         .post('/auth/logout')
         .set('Authorization', 'Bearer invalidtoken')
         .expect(401);
