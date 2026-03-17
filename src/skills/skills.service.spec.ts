@@ -99,7 +99,6 @@ describe('SkillsService', () => {
         title: 'New Skill',
         description: 'Description',
         category: 'category-id',
-        owner: 'user-id',
         images: [],
       };
 
@@ -110,15 +109,20 @@ describe('SkillsService', () => {
       };
       mockRepository.create.mockReturnValue(expectedSkill);
       mockRepository.save.mockResolvedValue(expectedSkill);
+      mockRepository.findOne.mockResolvedValue(expectedSkill);
 
-      const result = await service.create(createSkillDto);
+      const result = await service.create(createSkillDto, 'user-id');
 
       expect(mockRepository.create).toHaveBeenCalledWith({
         ...createSkillDto,
         category: { id: createSkillDto.category },
-        owner: { id: createSkillDto.owner },
+        owner: { id: 'user-id' },
       });
       expect(mockRepository.save).toHaveBeenCalledWith(expectedSkill);
+      expect(mockRepository.findOne).toHaveBeenCalledWith({
+        where: { id: expectedSkill.id },
+        relations: ['owner'],
+      });
       expect(result).toEqual(expectedSkill);
     });
   });
