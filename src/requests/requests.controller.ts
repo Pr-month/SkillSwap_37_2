@@ -8,12 +8,13 @@ import {
   Delete,
   ParseUUIDPipe,
   Request,
-  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { RequestsService } from './requests.service';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { UpdateRequestDto } from './dto/update-request.dto';
 import { TAuthRequest } from '../auth/auth.types';
+import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
 
 @Controller('requests')
 export class RequestsController {
@@ -25,6 +26,7 @@ export class RequestsController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAccessGuard)
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateRequestDto: UpdateRequestDto,
@@ -34,19 +36,22 @@ export class RequestsController {
   }
 
   @Get('incoming')
+  @UseGuards(JwtAccessGuard)
   async getIncoming(@Request() request: TAuthRequest) {
     return this.requestsService.findIncoming(request.user.sub);
   }
 
   @Get('outgoing')
+  @UseGuards(JwtAccessGuard)
   async getOutgoing(@Request() request: TAuthRequest) {
     return this.requestsService.findOutgoing(request.user.sub);
   }
 
   @Delete('/:id')
+  @UseGuards(JwtAccessGuard)
   async deleteRequest(
     @Request() request: TAuthRequest,
-    @Param("id") id: string
+    @Param('id') id: string,
   ) {
     return this.requestsService.delete(request.user, id);
   }
