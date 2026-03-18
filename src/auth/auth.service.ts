@@ -28,6 +28,7 @@ export class AuthService {
     const accessToken = await this.jwtService.signAsync(payload);
     const refreshToken = await this.jwtService.signAsync(payload, {
       expiresIn: this.config.refreshExpiresIn as StringValue,
+      secret: this.config.refreshToken,
     });
 
     const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);

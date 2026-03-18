@@ -13,7 +13,7 @@ import { ChangePasswordDto } from './dto/change-password.dto';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { GetUsersQueryDto } from './dto/get-users-query.dto';
 import { User } from './entities/user.entity';
-import { Skill } from 'src/skills/entities/skill.entity';
+import { Skill } from '../skills/entities/skill.entity';
 
 @Injectable()
 export class UsersService {
