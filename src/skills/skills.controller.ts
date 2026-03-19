@@ -17,7 +17,7 @@ import { UpdateSkillDto } from './dto/update-skill.dto';
 import { JwtAccessGuard } from '../auth/guards/jwt-access.guard';
 import { TAuthRequest } from '../auth/auth.types';
 import { GetSkillsQueryDto } from './dto/get-skills-query.dto';
-import { UsersService } from 'src/users/users.service';
+import { UsersService } from '../users/users.service';
 import {
   ApiCreateSkill,
   ApiFindAllSkills,
@@ -36,9 +36,10 @@ export class SkillsController {
   ) {}
 
   @Post()
+  @UseGuards(JwtAccessGuard)
   @ApiCreateSkill()
-  create(@Body() createSkillDto: CreateSkillDto) {
-    return this.skillsService.create(createSkillDto);
+  create(@Body() createSkillDto: CreateSkillDto, @Request() req: TAuthRequest) {
+    return this.skillsService.create(createSkillDto, req.user.sub);
   }
 
   @Get()

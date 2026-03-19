@@ -4,6 +4,9 @@ import {
   ExceptionFilter,
   HttpException,
   PayloadTooLargeException,
+  NotFoundException,
+  UnauthorizedException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { EntityNotFoundError, QueryFailedError } from 'typeorm';
@@ -27,6 +30,21 @@ export class AppExceptionFilter implements ExceptionFilter {
     if (exception instanceof EntityNotFoundError) {
       status = 404;
       message = 'Cущность не найдена';
+    }
+
+    if (exception instanceof NotFoundException) {
+      status = 404;
+      message = exception.message;
+    }
+
+    if (exception instanceof UnauthorizedException) {
+      status = 401;
+      message = exception.message;
+    }
+
+    if (exception instanceof ForbiddenException) {
+      status = 403;
+      message = exception.message;
     }
 
     if (exception instanceof PayloadTooLargeException) {

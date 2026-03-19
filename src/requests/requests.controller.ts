@@ -40,6 +40,7 @@ export class RequestsController {
 
   @Patch(':id')
   @ApiUpdateStatusRequest()
+  @UseGuards(JwtAccessGuard)
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateRequestDto: UpdateRequestDto,
@@ -50,18 +51,21 @@ export class RequestsController {
 
   @Get('incoming')
   @ApiGetIncomingRequests()
+  @UseGuards(JwtAccessGuard)
   async getIncoming(@Request() request: TAuthRequest) {
     return this.requestsService.findIncoming(request.user.sub);
   }
 
   @Get('outgoing')
   @ApiGetOutgoingRequests()
+  @UseGuards(JwtAccessGuard)
   async getOutgoing(@Request() request: TAuthRequest) {
     return this.requestsService.findOutgoing(request.user.sub);
   }
 
   @Delete('/:id')
   @ApiDeleteRequest()
+  @UseGuards(JwtAccessGuard)
   async deleteRequest(
     @Request() request: TAuthRequest,
     @Param('id') id: string,

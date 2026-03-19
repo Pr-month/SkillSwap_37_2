@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -13,6 +14,7 @@ import { Skill } from '../skills/entities/skill.entity';
 import { RequestStatus } from './requests.enums';
 import { UpdateRequestDto } from './dto/update-request.dto';
 import { UserRole } from '../users/users.enums';
+import { NotificationsService } from 'src/notifications/notifications.service';
 import { JwtPayload } from 'src/auth/auth.types';
 
 @Injectable()
@@ -24,6 +26,8 @@ export class RequestsService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Skill)
     private readonly skillRepository: Repository<Skill>,
+    @Inject()
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async create(createRequestDto: CreateRequestDto) {
@@ -82,7 +86,12 @@ export class RequestsService {
       requestedSkill: { id: requestedSkillId },
     });
 
-    return await this.requestRepository.save(request);
+    const savedSkill =  await this.requestRepository.save(request);
+
+    this.notificationsService.notifyUserRequestStatus(receiverId, requestedSkillId, RequestStatus.PENDING)
+    
+    return savedSkill;
+
   }
 
   async update(userId: string, id: string, updateRequestDto: UpdateRequestDto) {
@@ -107,6 +116,11 @@ export class RequestsService {
     if (request.status !== RequestStatus.PENDING) {
       request.isRead = true;
     }
+
+
+    const response =  await this.requestRepository.save(request);
+    
+    this.notificationsService.notifyUserRequestStatus(userId, id, updateRequestDto.status)
 
     return await this.requestRepository.save(request);
   }

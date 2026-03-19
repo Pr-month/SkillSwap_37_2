@@ -12,17 +12,11 @@ async function cleanDatabase() {
   await queryRunner.startTransaction();
 
   try {
-    // Отключаем триггеры для внешних ключей (для PostgreSQL)
-    await queryRunner.query('SET session_replication_role = replica;');
-
     // Удаляем данные из таблиц в порядке, обратном зависимостям
     await queryRunner.query(`TRUNCATE TABLE "requests" CASCADE;`);
     await queryRunner.query(`TRUNCATE TABLE "skills" CASCADE;`);
     await queryRunner.query(`TRUNCATE TABLE "users" CASCADE;`);
     await queryRunner.query(`TRUNCATE TABLE "categories" CASCADE;`);
-
-    // Включаем обратно
-    await queryRunner.query('SET session_replication_role = origin;');
 
     await queryRunner.commitTransaction();
     console.log('База данных очищена.');
@@ -42,19 +36,19 @@ async function seederTest() {
     await cleanDatabase();
 
     console.log('Запуск сидинга категорий...');
-    await seedCategories();
+    await seedCategories(AppDataSource);
     console.log('Сидинг категорий завершён.');
 
     console.log('Запуск сидинга администратора...');
-    await seedAdmin();
+    await seedAdmin(AppDataSource);
     console.log('Сидинг администратора завершён.');
 
     console.log('Запуск сидинга тестовых пользователей...');
-    await seedUsers();
+    await seedUsers(AppDataSource);
     console.log('Сидинг тестовых пользователей завершён.');
 
     console.log('Запуск сидинга навыков...');
-    await seedSkills();
+    await seedSkills(AppDataSource);
     console.log('Сидинг навыков завершён.');
 
     console.log('Все тестовые сидинги успешно выполнены.');

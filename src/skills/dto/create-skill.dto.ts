@@ -26,8 +26,4 @@ export class CreateSkillDto {
   @IsOptional()
   @IsUrl({}, { each: true })
   images: string[];
-
-  @IsUUID()
-  @IsNotEmpty()
-  owner: string;
 }

@@ -14,8 +14,8 @@ import { StringValue } from 'ms';
 import { FilesController } from './files/files.controller';
 import { CategoriesModule } from './categories/categories.module';
 import { RequestsModule } from './requests/requests.module';
-import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './auth/guards/roles.guard';
+import { NotificationsModule } from './notifications/notifications.module';
 import { CitiesModule } from './cities/cities.module';
 
 @Module({
@@ -48,15 +48,10 @@ import { CitiesModule } from './cities/cities.module';
     SkillsModule,
     CategoriesModule,
     RequestsModule,
+    NotificationsModule,
     CitiesModule,
   ],
   controllers: [AppController, FilesController],
-  providers: [
-    AppService,
-    {
-      provide: APP_GUARD,
-      useClass: RolesGuard,
-    },
-  ],
+  providers: [AppService, RolesGuard],
 })
 export class AppModule {}
