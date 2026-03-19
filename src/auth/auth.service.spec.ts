@@ -4,7 +4,6 @@ import * as bcrypt from 'bcrypt';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { jwtConfig } from '../config/jwt.config';
-import { useResolvedPath } from 'react-router-dom';
 import { UnauthorizedException } from '@nestjs/common';
 import { UserGender, UserRole } from '../users/users.enums';
 
