@@ -96,9 +96,19 @@ export class UsersService {
       return null;
     }
 
-    Object.assign(user, updateUserProfileDto);
-    const saved = await this.usersRepository.save(user);
+    const { wantToLearn, ...userData } = updateUserProfileDto;
+    Object.assign(user, userData);
 
+    if (wantToLearn !== undefined) {
+      if (wantToLearn.length === 0) {
+        user.wantToLearn = [];
+      } else {
+        const categories = await this.categoryRepository.findByIds(wantToLearn);
+        user.wantToLearn = categories;
+      }
+    }
+
+    const saved = await this.usersRepository.save(user);
     return this.toPublicUser(saved);
   }
 
