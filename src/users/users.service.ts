@@ -14,6 +14,7 @@ import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { GetUsersQueryDto } from './dto/get-users-query.dto';
 import { User } from './entities/user.entity';
 import { Skill } from '../skills/entities/skill.entity';
+import { Category } from '../categories/entities/category.entity';
 
 @Injectable()
 export class UsersService {
@@ -22,6 +23,8 @@ export class UsersService {
     private readonly usersRepository: Repository<User>,
     @InjectRepository(Skill)
     private readonly skillRepository: Repository<Skill>,
+    @InjectRepository(Category)
+    private readonly categoryRepository: Repository<Category>,
     @Inject(appConfig.KEY)
     private readonly config: IConfig,
   ) {}
@@ -36,7 +39,13 @@ export class UsersService {
   }
 
   async create(createUserDto: CreateUserDto) {
-    const user = this.usersRepository.create(createUserDto);
+    const { wantToLearn, ...userData } = createUserDto;
+    const user = this.usersRepository.create();
+    Object.assign(user, userData);
+    if (wantToLearn && wantToLearn.length > 0) {
+      const categories = await this.categoryRepository.findByIds(wantToLearn);
+      user.wantToLearn = categories;
+    }
     const saved = await this.usersRepository.save(user);
     return this.toPublicUser(saved);
   }
@@ -135,8 +144,13 @@ export class UsersService {
   }
 
   async createFromAuth(createUserDto: CreateUserDto): Promise<User> {
-    const user = this.usersRepository.create(createUserDto);
-
+    const { wantToLearn, ...userData } = createUserDto;
+    const user = this.usersRepository.create();
+    Object.assign(user, userData);
+    if (wantToLearn && wantToLearn.length > 0) {
+      const categories = await this.categoryRepository.findByIds(wantToLearn);
+      user.wantToLearn = categories;
+    }
     return this.usersRepository.save(user);
   }
 
