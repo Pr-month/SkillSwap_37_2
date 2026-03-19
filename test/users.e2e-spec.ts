@@ -4,6 +4,7 @@ import * as request from 'supertest';
 import { Test, TestingModule } from "@nestjs/testing";
 import { AppModule } from "../src/app.module";
 import { AppExceptionFilter } from "../src/common/all-exception.filter";
+import { adminEmail, adminPassword } from "src/scripts/seed-admin";
 
 interface LoginResponse {
     user: {
@@ -75,11 +76,11 @@ describe('UsersController (e2e)', () => {
     expect(userAccessToken).toBeDefined();
     expect(currentUserId).toBeDefined();
 
-    const adminLoginResponse = await request(app.getHttpServer())
+        const adminLoginResponse = await request(app.getHttpServer())
       .post('/auth/login')
       .send({
-        email: 'admin@test.com',
-        password: 'password123',
+        email: adminEmail,
+        password: adminPassword,
       })
       .expect(201);
 

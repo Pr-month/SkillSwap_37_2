@@ -7,6 +7,9 @@ import * as bcrypt from 'bcrypt';
 
 dotenv.config();
 
+export const adminEmail = process.env.ADMIN_EMAIL || 'admin@admin.ru';
+export const adminPassword = process.env.ADMIN_PASSWORD || 'admin1234';
+
 export async function seedAdmin(dataSource?: DataSource) {
   let externalDataSource = false;
   let ds: DataSource;
