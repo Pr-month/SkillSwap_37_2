@@ -51,9 +51,9 @@ describe('FilesController (e2e)', () => {
         )
         .expect(201);
 
-      expect(typeof response.body).toBe('string');
-      expect(response.body).toContain('/public/');
-      expect(response.body).toMatch(/^\/public\/.+/);
+      expect(typeof response.text).toBe('string');
+      expect(response.text).toContain('/public/');
+      expect(response.text).toMatch(/^\/public\/.+/);
     });
 
     it('should return 400 when file is not provided', async () => {
