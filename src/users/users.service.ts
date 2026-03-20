@@ -104,6 +104,13 @@ export class UsersService {
         user.wantToLearn = [];
       } else {
         const categories = await this.categoryRepository.findByIds(wantToLearn);
+        if (categories.length !== wantToLearn.length) {
+          const foundIds = categories.map((c) => c.id);
+          const missingIds = wantToLearn.filter((id) => !foundIds.includes(id));
+          throw new NotFoundException(
+            `Категории с ID ${missingIds.join(', ')} не найдены`,
+          );
+        }
         user.wantToLearn = categories;
       }
     }
@@ -159,6 +166,13 @@ export class UsersService {
     Object.assign(user, userData);
     if (wantToLearn && wantToLearn.length > 0) {
       const categories = await this.categoryRepository.findByIds(wantToLearn);
+      if (categories.length !== wantToLearn.length) {
+        const foundIds = categories.map((c) => c.id);
+        const missingIds = wantToLearn.filter((id) => !foundIds.includes(id));
+        throw new NotFoundException(
+          `Категории с ID ${missingIds.join(', ')} не найдены`,
+        );
+      }
       user.wantToLearn = categories;
     }
     return this.usersRepository.save(user);

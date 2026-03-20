@@ -4,7 +4,6 @@ import {
   ApiOkResponse,
   ApiNotFoundResponse,
   ApiBearerAuth,
-  ApiBody,
   ApiParam,
   ApiQuery,
   ApiUnauthorizedResponse,
@@ -72,6 +71,16 @@ export const ApiUpdatePassword = () =>
     ApiUnauthorizedResponse({ description: 'Пользователь не авторизован' }),
   );
 
+export const ApiUpdateMe = () =>
+  applyDecorators(
+    ApiOperation({ summary: 'Обновить профиль текущего пользователя' }),
+    ApiBearerAuth(),
+    ApiOkResponse({ type: UserResponse }),
+    ApiNotFoundResponse({ description: 'Пользователь не найден' }),
+    ApiBadRequestResponse({ description: 'Неверные данные запроса' }),
+    ApiUnauthorizedResponse({ description: 'Пользователь не авторизован' }),
+  );
+
 export const ApiFindAllUsers = () =>
   applyDecorators(
     ApiOperation({ summary: 'Получить список пользователей' }),
@@ -83,7 +92,11 @@ export const ApiFindAllUsers = () =>
 export const ApiFindOneUser = () =>
   applyDecorators(
     ApiOperation({ summary: 'Получить пользователя по ID' }),
-    ApiParam({ name: 'id', type: 'string', example: '123e4567-e89b-12d3-a456-426614174000' }),
+    ApiParam({
+      name: 'id',
+      type: 'string',
+      example: '123e4567-e89b-12d3-a456-426614174000',
+    }),
     ApiOkResponse({ type: UserResponse }),
     ApiNotFoundResponse({ description: 'Пользователь не найден' }),
   );
@@ -91,7 +104,11 @@ export const ApiFindOneUser = () =>
 export const ApiUpdateUser = () =>
   applyDecorators(
     ApiOperation({ summary: 'Обновить профиль пользователя' }),
-    ApiParam({ name: 'id', type: 'string', example: '123e4567-e89b-12d3-a456-426614174000' }),
+    ApiParam({
+      name: 'id',
+      type: 'string',
+      example: '123e4567-e89b-12d3-a456-426614174000',
+    }),
     ApiOkResponse({ type: UserResponse }),
     ApiNotFoundResponse({ description: 'Пользователь не найден' }),
     ApiBadRequestResponse({ description: 'Неверные данные запроса' }),
@@ -100,7 +117,11 @@ export const ApiUpdateUser = () =>
 export const ApiDeleteUser = () =>
   applyDecorators(
     ApiOperation({ summary: 'Удалить пользователя' }),
-    ApiParam({ name: 'id', type: 'string', example: '123e4567-e89b-12d3-a456-426614174000' }),
+    ApiParam({
+      name: 'id',
+      type: 'string',
+      example: '123e4567-e89b-12d3-a456-426614174000',
+    }),
     ApiNoContentResponse({ description: 'Пользователь удалён' }),
     ApiNotFoundResponse({ description: 'Пользователь не найден' }),
     ApiForbiddenResponse({ description: 'Недостаточно прав' }),
