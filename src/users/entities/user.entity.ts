@@ -7,8 +7,8 @@ import {
 } from 'typeorm';
 import { UserGender, UserRole } from '../users.enums';
 import { Skill } from '../../skills/entities/skill.entity';
+import { Category } from '../../categories/entities/category.entity';
 import { Exclude } from 'class-transformer';
-import { IsArray } from 'class-validator';
 
 @Entity('users')
 export class User {
@@ -56,6 +56,9 @@ export class User {
 
   @ManyToMany(() => Skill)
   favoriteSkills?: Skill[];
+
+  @ManyToMany(() => Category)
+  wantToLearn?: Category[];
 
   @OneToMany(() => Skill, (skill) => skill.owner)
   skills: Skill[];

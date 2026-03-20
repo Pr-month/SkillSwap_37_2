@@ -20,6 +20,7 @@ import { ApiTags } from '@nestjs/swagger';
 import {
   ApiGetMe,
   ApiUpdatePassword,
+  ApiUpdateMe,
   ApiFindAllUsers,
   ApiFindOneUser,
   ApiUpdateUser,
@@ -49,6 +50,16 @@ export class UsersController {
     @Body() changePasswordDto: ChangePasswordDto,
   ) {
     return this.usersService.changePassword(req.user.sub, changePasswordDto);
+  }
+
+  @ApiUpdateMe()
+  @UseGuards(JwtAccessGuard)
+  @Patch('me')
+  updateMe(
+    @Request() req: TAuthRequest,
+    @Body() updateUserProfileDto: UpdateUserProfileDto,
+  ) {
+    return this.usersService.updateProfile(req.user.sub, updateUserProfileDto);
   }
 
   @ApiFindAllUsers()

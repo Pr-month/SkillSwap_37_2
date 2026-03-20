@@ -8,6 +8,9 @@ import {
   MaxDate,
   MinDate,
   MinLength,
+  IsArray,
+  IsUUID,
+  IsOptional,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { UserGender } from 'src/users/users.enums';
@@ -97,4 +100,15 @@ export class CreateAuthDto {
   //uncomment if required
   // @IsNotEmpty()
   avatar: string;
+
+  @ApiProperty({
+    example: ['category-uuid-1', 'category-uuid-2'],
+    description: 'ID категорий, которым пользователь хочет научиться',
+    required: false,
+    type: [String],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsUUID('4', { each: true })
+  wantToLearn?: string[];
 }
