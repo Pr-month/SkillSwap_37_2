@@ -89,6 +89,29 @@ export class UsersService {
     return this.toPublicUser(user);
   }
 
+  async findUsersBySkill(skillId: string) {
+    // 1. Найти навык с категорией
+    const skill = await this.skillRepository.findOne({
+      where: { id: skillId },
+      relations: ['category'],
+    });
+    if (!skill) {
+      throw new NotFoundException(`Навык с id ${skillId} не найден`);
+    }
+    const categoryId = skill.category.id;
+
+    // 2. Найти пользователей, у которых есть навык с этой категорией
+    const users = await this.usersRepository
+      .createQueryBuilder('user')
+      .innerJoin('user.skills', 'skill')
+      .innerJoin('skill.category', 'category')
+      .where('category.id = :categoryId', { categoryId })
+      .select(['user.id', 'user.name', 'user.email', 'user.role'])
+      .take(10)
+      .getMany();
+
+    return users.map((user) => this.toPublicUser(user));
+  }
   async updateProfile(id: string, updateUserProfileDto: UpdateUserProfileDto) {
     const user = await this.usersRepository.findOneBy({ id });
 

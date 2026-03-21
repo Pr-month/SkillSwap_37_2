@@ -25,10 +25,11 @@ import {
   ApiFindOneUser,
   ApiUpdateUser,
   ApiDeleteUser,
+  ApiFindUsersBySkill,
 } from './users.swagger';
-import { Roles } from 'src/auth/decorators/roles.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from './users.enums';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 
 @ApiTags('Users')
 @Controller('users')
@@ -66,6 +67,11 @@ export class UsersController {
   @Get()
   findAll(@Query() getUsersQueryDto: GetUsersQueryDto) {
     return this.usersService.findAll(getUsersQueryDto);
+  }
+  @ApiFindUsersBySkill()
+  @Get('by-skill/:id')
+  findUsersBySkill(@Param('id', ParseUUIDPipe) id: string) {
+    return this.usersService.findUsersBySkill(id);
   }
 
   @ApiFindOneUser()

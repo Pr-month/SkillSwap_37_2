@@ -1,12 +1,13 @@
-import { AppDataSource } from '../config/db.config';
+import { DataSource } from 'typeorm';
+import { dbConfig } from '../config/db.config';
 import { seedAdmin } from './seed-admin';
 import { seedUsers } from './seed-users';
 import { seedSkills } from './seed-skills';
 import { seedCategories } from './seed-categories';
 
-async function cleanDatabase() {
+async function cleanDatabase(dataSource: DataSource) {
   console.log('Очистка базы данных...');
-  const queryRunner = AppDataSource.createQueryRunner();
+  const queryRunner = dataSource.createQueryRunner();
 
   await queryRunner.connect();
   await queryRunner.startTransaction();
@@ -30,25 +31,31 @@ async function cleanDatabase() {
 }
 
 async function seederTest() {
-  try {
-    await AppDataSource.initialize();
+  // Создаём DataSource с synchronize: false
+  const dataSource = new DataSource({
+    ...dbConfig(),
+    synchronize: false,
+  });
 
-    await cleanDatabase();
+  try {
+    await dataSource.initialize();
+
+    await cleanDatabase(dataSource);
 
     console.log('Запуск сидинга категорий...');
-    await seedCategories(AppDataSource);
+    await seedCategories(dataSource);
     console.log('Сидинг категорий завершён.');
 
     console.log('Запуск сидинга администратора...');
-    await seedAdmin(AppDataSource);
+    await seedAdmin(dataSource);
     console.log('Сидинг администратора завершён.');
 
     console.log('Запуск сидинга тестовых пользователей...');
-    await seedUsers(AppDataSource);
+    await seedUsers(dataSource);
     console.log('Сидинг тестовых пользователей завершён.');
 
     console.log('Запуск сидинга навыков...');
-    await seedSkills(AppDataSource);
+    await seedSkills(dataSource);
     console.log('Сидинг навыков завершён.');
 
     console.log('Все тестовые сидинги успешно выполнены.');
@@ -56,8 +63,8 @@ async function seederTest() {
     console.error('Ошибка в тестовом сидинге:', error);
     process.exit(1);
   } finally {
-    if (AppDataSource.isInitialized) {
-      await AppDataSource.destroy();
+    if (dataSource.isInitialized) {
+      await dataSource.destroy();
     }
   }
 }
