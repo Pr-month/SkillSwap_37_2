@@ -4,7 +4,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import * as request from 'supertest';
+import request from 'supertest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../src/app.module';
 import { AppExceptionFilter } from '../src/common/all-exception.filter';
@@ -83,9 +83,8 @@ describe('UsersController (e2e)', () => {
     const adminLoginResponse = await request(app.getHttpServer())
       .post('/auth/login')
       .send({
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         email: adminEmail,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
         password: adminPassword,
       })
       .expect(201);

@@ -23,7 +23,6 @@ describe('AuthController', () => {
       ],
     }).compile();
 
-
     controller = module.get<AuthController>(AuthController);
   });
 
@@ -34,13 +33,13 @@ describe('AuthController', () => {
   it('should call register', async () => {
     const dto = {
       name: 'Test User',
-  email: 'test@example.com',
-  password: '123456',
-  about: 'About me',
-  birthdate: new Date('2000-01-01'),
-  city: 'Moscow',
-  gender: UserGender.MALE,
-  avatar: 'avatar.png',
+      email: 'test@example.com',
+      password: '123456',
+      about: 'About me',
+      birthdate: new Date('2000-01-01'),
+      city: 'Moscow',
+      gender: UserGender.MALE,
+      avatar: 'avatar.png',
     };
     const authService = module.get(AuthService);
 
@@ -57,6 +56,4 @@ describe('AuthController', () => {
 
     expect(authService.login).toHaveBeenLastCalledWith(dto);
   });
-
-
 });

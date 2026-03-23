@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import * as path from 'path';
-import * as request from 'supertest';
+import request from 'supertest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../src/app.module';
 import { AppExceptionFilter } from '../src/common/all-exception.filter';
@@ -45,10 +45,7 @@ describe('FilesController (e2e)', () => {
     it('should upload valid image', async () => {
       const response = await request(app.getHttpServer())
         .post('/files/upload')
-        .attach(
-          'image',
-          path.resolve(__dirname, 'fixtures', 'test-image.png'),
-        )
+        .attach('image', path.resolve(__dirname, 'fixtures', 'test-image.png'))
         .expect(201);
 
       expect(typeof response.text).toBe('string');
@@ -57,38 +54,27 @@ describe('FilesController (e2e)', () => {
     });
 
     it('should return 400 when file is not provided', async () => {
-      await request(app.getHttpServer())
-        .post('/files/upload')
-        .expect(400);
+      await request(app.getHttpServer()).post('/files/upload').expect(400);
     });
 
     it('should return 400 for invalid file type', async () => {
       await request(app.getHttpServer())
         .post('/files/upload')
-        .attach(
-          'image',
-          path.resolve(__dirname, 'fixtures', 'not-image.txt'),
-        )
+        .attach('image', path.resolve(__dirname, 'fixtures', 'not-image.txt'))
         .expect(400);
     });
 
     it('should return 400 for too small file', async () => {
       await request(app.getHttpServer())
         .post('/files/upload')
-        .attach(
-          'image',
-          path.resolve(__dirname, 'fixtures', 'tiny-image.png'),
-        )
+        .attach('image', path.resolve(__dirname, 'fixtures', 'tiny-image.png'))
         .expect(400);
     });
 
     it('should return 413 for too large file', async () => {
       await request(app.getHttpServer())
         .post('/files/upload')
-        .attach(
-          'image',
-          path.resolve(__dirname, 'fixtures', 'big-image.jpg'),
-        )
+        .attach('image', path.resolve(__dirname, 'fixtures', 'big-image.jpg'))
         .expect(413);
     });
   });

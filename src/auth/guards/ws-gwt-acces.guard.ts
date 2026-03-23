@@ -1,4 +1,9 @@
-import { CanActivate, ExecutionContext, Inject, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { JwtService } from '@nestjs/jwt';
 import { Socket } from 'socket.io';
@@ -6,13 +11,12 @@ import { IJwtConfig, jwtConfig } from '../../config/jwt.config';
 
 @Injectable()
 export class WsJwtGuard implements CanActivate {
-
   constructor(
-      @Inject(jwtConfig.KEY)
-      private readonly config: IJwtConfig,
-      private jwtService: JwtService) {}
+    @Inject(jwtConfig.KEY)
+    private readonly config: IJwtConfig,
+    private jwtService: JwtService,
+  ) {}
 
-      
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
@@ -21,7 +25,7 @@ export class WsJwtGuard implements CanActivate {
     if (!token) {
       return false;
     }
-    
+
     try {
       const payload = this.validateToken(token);
       client.data.user = payload;
@@ -33,18 +37,18 @@ export class WsJwtGuard implements CanActivate {
 
   private extractToken(client: Socket): string | null {
     const authHeader = client.handshake.headers.authorization;
-    
+
     if (authHeader) {
       const [type, token] = authHeader.split(' ') ?? [];
       return type === 'Bearer' ? token : null;
     }
-        
+
     return null;
   }
 
   private async validateToken(token: string) {
     const payload = await this.jwtService.verifyAsync(token, {
-        secret: this.config.secret,
+      secret: this.config.secret,
     });
 
     return payload;

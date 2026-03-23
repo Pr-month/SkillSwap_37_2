@@ -19,7 +19,9 @@ describe('RolesGuard', () => {
   let reflector: jest.Mocked<Reflector>;
 
   beforeEach(() => {
-    reflector = { getAllAndOverride: jest.fn() } as unknown as jest.Mocked<Reflector>;
+    reflector = {
+      getAllAndOverride: jest.fn(),
+    } as unknown as jest.Mocked<Reflector>;
     guard = new RolesGuard(reflector);
   });
 
@@ -33,7 +35,10 @@ describe('RolesGuard', () => {
     const result = guard.canActivate(createContext(null));
 
     expect(result).toBe(true);
-    expect(reflector.getAllAndOverride).toHaveBeenCalledWith(ROLES_KEY, [{}, {}]);
+    expect(reflector.getAllAndOverride).toHaveBeenCalledWith(ROLES_KEY, [
+      {},
+      {},
+    ]);
   });
 
   it('должен пропускать запрос если роль пользователя совпадает с требуемой', () => {
@@ -55,13 +60,16 @@ describe('RolesGuard', () => {
   it('должен выбрасывать ForbiddenException если роль пользователя не совпадает с требуемой', () => {
     reflector.getAllAndOverride.mockReturnValue([UserRole.ADMIN]);
 
-    expect(() => guard.canActivate(createContext({ role: UserRole.USER }))).toThrow(
-      ForbiddenException,
-    );
+    expect(() =>
+      guard.canActivate(createContext({ role: UserRole.USER })),
+    ).toThrow(ForbiddenException);
   });
 
   it('должен пропускать запрос если одна из нескольких требуемых ролей совпадает', () => {
-    reflector.getAllAndOverride.mockReturnValue([UserRole.ADMIN, UserRole.USER]);
+    reflector.getAllAndOverride.mockReturnValue([
+      UserRole.ADMIN,
+      UserRole.USER,
+    ]);
 
     const result = guard.canActivate(createContext({ role: UserRole.USER }));
 

@@ -19,12 +19,11 @@ const NOTIFICATIONS_PORT =
 @WebSocketGateway(NOTIFICATIONS_PORT, {
   namespace: 'notifications',
 })
-export class NotificationsGateway{
-
+export class NotificationsGateway {
   constructor(
     @Inject(appConfig.KEY)
     private readonly config: IConfig,
-  ){
+  ) {
     // this.updateCorsConfig();
   }
 
@@ -34,11 +33,11 @@ export class NotificationsGateway{
     if (server.engine && server.engine.opts) {
       server._opts.cors = {
         origin: corsOrigin,
-        credentials: true
-      }      
+        credentials: true,
+      };
     }
   }
-  
+
   private userSockets: Map<string, string[]> = new Map();
 
   @WebSocketServer()
@@ -52,7 +51,7 @@ export class NotificationsGateway{
   @UseGuards(WsJwtGuard)
   handleRegister(
     @MessageBody() userId: string,
-    @ConnectedSocket() client: Socket
+    @ConnectedSocket() client: Socket,
   ): void {
     client.join(userId);
   }
@@ -62,13 +61,12 @@ export class NotificationsGateway{
   handleDisconnect(
     @ConnectedSocket() client: Socket,
     @MessageBody() userId: string,
-): void {
-      client.leave(userId);
+  ): void {
+    client.leave(userId);
   }
 
   @SubscribeMessage('notification')
   sendNotification(userId: string, payload: any) {
     this.server.to(userId).emit('notification', payload);
   }
-
 }

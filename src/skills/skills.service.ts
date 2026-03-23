@@ -124,12 +124,10 @@ export class SkillsService {
     }
 
     if (skill.images?.length) {
-    await Promise.allSettled(
-      skill.images.map((imagePath) =>
-        unlink(join(process.cwd(), imagePath)),
-      ),
-    );
-  }
+      await Promise.allSettled(
+        skill.images.map((imagePath) => unlink(join(process.cwd(), imagePath))),
+      );
+    }
 
     return this.skillsRepository.delete(id);
   }

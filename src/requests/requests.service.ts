@@ -86,12 +86,15 @@ export class RequestsService {
       requestedSkill: { id: requestedSkillId },
     });
 
-    const savedSkill =  await this.requestRepository.save(request);
+    const savedSkill = await this.requestRepository.save(request);
 
-    this.notificationsService.notifyUserRequestStatus(receiverId, requestedSkillId, RequestStatus.PENDING)
-    
+    this.notificationsService.notifyUserRequestStatus(
+      receiverId,
+      requestedSkillId,
+      RequestStatus.PENDING,
+    );
+
     return savedSkill;
-
   }
 
   async update(userId: string, id: string, updateRequestDto: UpdateRequestDto) {
@@ -117,27 +120,28 @@ export class RequestsService {
       request.isRead = true;
     }
 
+    const response = await this.requestRepository.save(request);
 
-    const response =  await this.requestRepository.save(request);
-    
-    this.notificationsService.notifyUserRequestStatus(userId, id, updateRequestDto.status)
+    this.notificationsService.notifyUserRequestStatus(
+      userId,
+      id,
+      updateRequestDto.status,
+    );
 
     return await this.requestRepository.save(request);
   }
 
-
   async delete(user: JwtPayload, deletedId: string) {
-    const request = await this.requestRepository.findOne({ where: { id: deletedId } });
+    const request = await this.requestRepository.findOne({
+      where: { id: deletedId },
+    });
 
     if (!request) {
       throw new NotFoundException('Заявка не найдена');
     }
 
     /* Проверим, что статус изменяет получатель или админ */
-    if (
-      user.role !== UserRole.ADMIN &&
-      request.sender.id !== user.sub
-    ) {
+    if (user.role !== UserRole.ADMIN && request.sender.id !== user.sub) {
       throw new ForbiddenException(
         'Заявку может удалить администратор или отправитель',
       );
@@ -145,7 +149,6 @@ export class RequestsService {
 
     return await this.requestRepository.delete({ id: deletedId });
   }
-
 
   async findIncoming(userId: string) {
     return this.requestRepository.find({

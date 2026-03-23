@@ -2,7 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CategoriesService } from './categories.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Category } from './entities/category.entity';
-import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 
 describe('CategoriesService', () => {
   let service: CategoriesService;
@@ -24,12 +28,12 @@ describe('CategoriesService', () => {
         {
           provide: getRepositoryToken(Category),
           useValue: mockCategoryRepository,
-        }
+        },
       ],
     }).compile();
 
     service = module.get<CategoriesService>(CategoriesService);
-    jest.clearAllMocks()
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -85,7 +89,9 @@ describe('CategoriesService', () => {
       mockCategoryRepository.create.mockReturnValue(category);
       mockCategoryRepository.findOneBy.mockResolvedValue(null);
 
-      await expect(service.create(dto as any)).rejects.toThrow(NotFoundException);
+      await expect(service.create(dto as any)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -127,7 +133,9 @@ describe('CategoriesService', () => {
 
       await service.remove('1');
 
-      expect(mockCategoryRepository.findOneBy).toHaveBeenCalledWith({ id: '1' });
+      expect(mockCategoryRepository.findOneBy).toHaveBeenCalledWith({
+        id: '1',
+      });
       expect(mockCategoryRepository.remove).toHaveBeenCalledWith(category);
     });
 
@@ -145,7 +153,7 @@ describe('CategoriesService', () => {
         name: 'Old Name',
         parent: null,
       };
-      const dto = { name: 'New Name', };
+      const dto = { name: 'New Name' };
 
       mockCategoryRepository.findOne.mockResolvedValue(category);
       mockCategoryRepository.findOneBy.mockResolvedValue(null);
@@ -161,7 +169,7 @@ describe('CategoriesService', () => {
         relations: ['parent'],
       });
 
-       expect(mockCategoryRepository.findOneBy).toHaveBeenCalledWith({
+      expect(mockCategoryRepository.findOneBy).toHaveBeenCalledWith({
         name: 'New Name',
       });
 
@@ -182,7 +190,7 @@ describe('CategoriesService', () => {
       mockCategoryRepository.findOne.mockResolvedValue(null);
 
       await expect(
-        service.update('1', { name: 'New Name' } as any)
+        service.update('1', { name: 'New Name' } as any),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -221,9 +229,9 @@ describe('CategoriesService', () => {
 
       mockCategoryRepository.findOne.mockResolvedValue(category);
 
-      await expect(service.update('1', dto as any)).rejects.toThrow(BadRequestException);
+      await expect(service.update('1', dto as any)).rejects.toThrow(
+        BadRequestException,
+      );
     });
-    
   });
-
 });
