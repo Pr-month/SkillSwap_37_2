@@ -1,42 +1,45 @@
-import { ClassSerializerInterceptor, INestApplication, ValidationPipe } from "@nestjs/common";
-import { Reflector } from "@nestjs/core";
+import {
+  ClassSerializerInterceptor,
+  INestApplication,
+  ValidationPipe,
+} from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import * as request from 'supertest';
-import { Test, TestingModule } from "@nestjs/testing";
-import { AppModule } from "../src/app.module";
-import { AppExceptionFilter } from "../src/common/all-exception.filter";
-import { adminEmail, adminPassword } from "src/scripts/seed-admin";
+import { Test, TestingModule } from '@nestjs/testing';
+import { AppModule } from '../src/app.module';
+import { AppExceptionFilter } from '../src/common/all-exception.filter';
+import { adminEmail, adminPassword } from 'src/scripts/seed-admin';
 
 interface LoginResponse {
-    user: {
-        id: string;
-        name: string;
-        email: string;
-        role: string;
-    };
-    tokens: {
-        accessToken: string;
-        refreshToken: string;
-    };
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+  };
+  tokens: {
+    accessToken: string;
+    refreshToken: string;
+  };
 }
 
 interface UsersListResponse {
-    data: Array<{
-        id: string;
-        name: string;
-        email: string;
-        role: string;
-    }>;
-    meta: {
-        total: number;
-        page: number;
-        limit: number;
-        totalPages: number;
-    };
+  data: Array<{
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+  }>;
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
 }
 
-
 describe('UsersController (e2e)', () => {
-  let app: INestApplication
+  let app: INestApplication;
   let userAccessToken: string;
   let adminAccessToken: string;
   let currentUserId: string;
@@ -70,21 +73,25 @@ describe('UsersController (e2e)', () => {
       })
       .expect(201);
 
-    userAccessToken = (userLoginResponse.body as LoginResponse).tokens.accessToken;
+    userAccessToken = (userLoginResponse.body as LoginResponse).tokens
+      .accessToken;
     currentUserId = (userLoginResponse.body as LoginResponse).user.id;
 
     expect(userAccessToken).toBeDefined();
     expect(currentUserId).toBeDefined();
 
-        const adminLoginResponse = await request(app.getHttpServer())
+    const adminLoginResponse = await request(app.getHttpServer())
       .post('/auth/login')
       .send({
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         email: adminEmail,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         password: adminPassword,
       })
       .expect(201);
 
-    adminAccessToken = (adminLoginResponse.body as LoginResponse).tokens.accessToken;
+    adminAccessToken = (adminLoginResponse.body as LoginResponse).tokens
+      .accessToken;
     expect(adminAccessToken).toBeDefined();
   });
 
@@ -100,11 +107,15 @@ describe('UsersController (e2e)', () => {
 
       expect(response.body).toHaveProperty('data');
       expect(response.body).toHaveProperty('meta');
-      expect(Array.isArray((response.body as UsersListResponse).data)).toBe(true);
-      expect(response.body.meta).toHaveProperty('total');
-      expect(response.body.meta).toHaveProperty('page');
-      expect(response.body.meta).toHaveProperty('limit');
-      expect(response.body.meta).toHaveProperty('totalPages');
+      expect(Array.isArray((response.body as UsersListResponse).data)).toBe(
+        true,
+      );
+      expect((response.body as UsersListResponse).meta).toHaveProperty('total');
+      expect((response.body as UsersListResponse).meta).toHaveProperty('page');
+      expect((response.body as UsersListResponse).meta).toHaveProperty('limit');
+      expect((response.body as UsersListResponse).meta).toHaveProperty(
+        'totalPages',
+      );
     });
 
     it('should return 404 for non-existent page', async () => {
@@ -128,9 +139,7 @@ describe('UsersController (e2e)', () => {
     });
 
     it('should return 400 for invalid uuid', async () => {
-      await request(app.getHttpServer())
-        .get('/users/not-a-uuid')
-        .expect(400);
+      await request(app.getHttpServer()).get('/users/not-a-uuid').expect(400);
     });
   });
 
@@ -148,9 +157,7 @@ describe('UsersController (e2e)', () => {
     });
 
     it('should require authentication', async () => {
-      await request(app.getHttpServer())
-        .get('/users/me')
-        .expect(401);
+      await request(app.getHttpServer()).get('/users/me').expect(401);
     });
   });
 
@@ -214,4 +221,50 @@ describe('UsersController (e2e)', () => {
     });
   });
 
+  describe('GET /users/by-skill/:id', () => {
+    it('should return 400 for invalid uuid', async () => {
+      await request(app.getHttpServer())
+        .get('/users/by-skill/not-a-uuid')
+        .expect(400);
+    });
+
+    it('should return 404 for non-existent skill', async () => {
+      const nonExistentSkillId = '00000000-0000-0000-0000-000000000000';
+      await request(app.getHttpServer())
+        .get(`/users/by-skill/${nonExistentSkillId}`)
+        .expect(404);
+    });
+
+    it('should return users with given skill', async () => {
+      // First, get a skill ID from the database via GET /skills
+      const skillsResponse = await request(app.getHttpServer())
+        .get('/skills')
+        .query({ limit: 1 })
+        .expect(200);
+      const skillId = (skillsResponse.body as { data: Array<{ id: string }> })
+        .data[0]?.id;
+      expect(skillId).toBeDefined();
+
+      const response = await request(app.getHttpServer())
+        .get(`/users/by-skill/${skillId}`)
+        .expect(200);
+
+      const responseBody = response.body as Array<{
+        id: string;
+        name: string;
+        email: string;
+        role: string;
+      }>;
+      expect(responseBody).toBeInstanceOf(Array);
+      expect(responseBody.length).toBeLessThanOrEqual(10);
+      // Each user should have id, name, email, role, etc.
+      if (responseBody.length > 0) {
+        const user = responseBody[0];
+        expect(user).toHaveProperty('id');
+        expect(user).toHaveProperty('name');
+        expect(user).toHaveProperty('email');
+        expect(user).toHaveProperty('role');
+      }
+    });
+  });
 });

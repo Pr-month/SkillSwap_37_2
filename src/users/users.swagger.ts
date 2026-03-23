@@ -126,3 +126,16 @@ export const ApiDeleteUser = () =>
     ApiNotFoundResponse({ description: 'Пользователь не найден' }),
     ApiForbiddenResponse({ description: 'Недостаточно прав' }),
   );
+
+export const ApiFindUsersBySkill = () =>
+  applyDecorators(
+    ApiOperation({ summary: 'Получить пользователей по навыку' }),
+    ApiParam({
+      name: 'id',
+      type: 'string',
+      example: '123e4567-e89b-12d3-a456-426614174000',
+      description: 'ID навыка',
+    }),
+    ApiOkResponse({ type: [UserResponse] }),
+    ApiNotFoundResponse({ description: 'Навык не найден' }),
+  );
