@@ -8,8 +8,8 @@ import {
 } from '@nestjs/websockets';
 
 import { Server, Socket } from 'socket.io';
-import { WsJwtGuard } from 'src/auth/guards/ws-gwt-acces.guard';
-import { appConfig, IConfig } from 'src/config/app.config';
+import { WsJwtGuard } from '../auth/guards/ws-gwt-acces.guard';
+import { appConfig, IConfig } from '../config/app.config';
 
 const NOTIFICATIONS_PORT =
   process.env.PORT_NOTIFICATIONS !== undefined

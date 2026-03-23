@@ -14,8 +14,8 @@ import { Skill } from '../skills/entities/skill.entity';
 import { RequestStatus } from './requests.enums';
 import { UpdateRequestDto } from './dto/update-request.dto';
 import { UserRole } from '../users/users.enums';
-import { NotificationsService } from 'src/notifications/notifications.service';
-import { JwtPayload } from 'src/auth/auth.types';
+import { NotificationsService } from '../notifications/notifications.service';
+import { JwtPayload } from '../auth/auth.types';
 
 @Injectable()
 export class RequestsService {

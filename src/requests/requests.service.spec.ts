@@ -12,7 +12,8 @@ import {
 } from '@nestjs/common';
 import { RequestStatus } from './requests.enums';
 import { UserRole } from '../users/users.enums';
-import { NotificationsService } from 'src/notifications/notifications.service';
+import { NotificationsService } from '../notifications/notifications.service';
+
 
 describe('RequestsService', () => {
   let service: RequestsService;
