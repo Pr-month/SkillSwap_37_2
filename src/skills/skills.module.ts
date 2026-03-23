@@ -1,14 +1,14 @@
-import {Module} from '@nestjs/common';
-import {TypeOrmModule} from '@nestjs/typeorm';
-import {SkillsService} from './skills.service';
-import {SkillsController} from './skills.controller';
-import {Skill} from './entities/skill.entity';
-import {UsersService} from "../users/users.service";
-import {UsersModule} from "../users/users.module";
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { SkillsService } from './skills.service';
+import { SkillsController } from './skills.controller';
+import { Skill } from './entities/skill.entity';
+import { UsersService } from '../users/users.service';
+import { UsersModule } from '../users/users.module';
 
 @Module({
-    imports: [UsersModule, TypeOrmModule.forFeature([Skill])],
-    controllers: [SkillsController],
-    providers: [SkillsService],
+  imports: [UsersModule, TypeOrmModule.forFeature([Skill])],
+  controllers: [SkillsController],
+  providers: [SkillsService],
 })
 export class SkillsModule {}

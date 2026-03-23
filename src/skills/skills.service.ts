@@ -10,6 +10,8 @@ import { UpdateSkillDto } from './dto/update-skill.dto';
 import { GetSkillsQueryDto } from './dto/get-skills-query.dto';
 import { Skill } from './entities/skill.entity';
 import { JwtPayload } from 'src/auth/auth.types';
+import { unlink } from 'fs/promises';
+import { join } from 'path';
 
 @Injectable()
 export class SkillsService {
@@ -18,13 +20,19 @@ export class SkillsService {
     private readonly skillsRepository: Repository<Skill>,
   ) {}
 
-  async create(createSkillDto: CreateSkillDto) {
+  async create(createSkillDto: CreateSkillDto, ownerId: string) {
     const skill = this.skillsRepository.create({
       ...createSkillDto,
       category: { id: createSkillDto.category },
-      owner: { id: createSkillDto.owner },
+      owner: { id: ownerId },
     });
-    return await this.skillsRepository.save(skill);
+
+    const savedSkill = await this.skillsRepository.save(skill);
+
+    return await this.skillsRepository.findOne({
+      where: { id: savedSkill.id },
+      relations: ['owner'],
+    });
   }
 
   async findAll(query: GetSkillsQueryDto) {
@@ -109,7 +117,18 @@ export class SkillsService {
     return this.skillsRepository.save(skill);
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} skill`;
+  async remove(id: string) {
+    const skill = await this.skillsRepository.findOneBy({ id });
+    if (!skill) {
+      throw new NotFoundException(`Навык с id ${id} не найден`);
+    }
+
+    if (skill.images?.length) {
+      await Promise.allSettled(
+        skill.images.map((imagePath) => unlink(join(process.cwd(), imagePath))),
+      );
+    }
+
+    return this.skillsRepository.delete(id);
   }
 }

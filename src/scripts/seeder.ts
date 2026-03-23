@@ -1,21 +1,28 @@
+import { AppDataSource } from '../config/db.config';
 import { seedAdmin } from './seed-admin';
-import { seedUsers } from './seed-users';
-import { seedSkills } from './seed-skills';
+import { seedCategories } from './seed-categories';
 
 async function seeder() {
-  console.log('Запуск сидинга администратора...');
-  await seedAdmin();
-  console.log('Сидинг администратора завершён.');
+  await AppDataSource.initialize();
 
-  console.log('Запуск сидинга тестовых пользователей...');
-  await seedUsers();
-  console.log('Сидинг тестовых пользователей завершён.');
+  try {
+    console.log('Запуск сидинга категорий...');
+    await seedCategories(AppDataSource);
+    console.log('Сидинг категорий завершён.');
 
-  console.log('Запуск сидинга навыков...');
-  await seedSkills();
-  console.log('Сидинг навыков завершён.');
+    console.log('Запуск сидинга администратора...');
+    await seedAdmin(AppDataSource);
+    console.log('Сидинг администратора завершён.');
 
-  console.log('Все сидинги успешно выполнены.');
+    console.log('Все сидинги успешно выполнены.');
+  } catch (error) {
+    console.error('Ошибка в мастер-сидинге:', error);
+    throw error;
+  } finally {
+    if (AppDataSource.isInitialized) {
+      await AppDataSource.destroy();
+    }
+  }
 }
 
 if (require.main === module) {

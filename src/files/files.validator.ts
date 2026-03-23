@@ -1,4 +1,5 @@
 import { FileValidator, Logger } from '@nestjs/common';
+import { UPLOAD_ERROR } from './files.errors';
 
 export class MinFileSizeValidator extends FileValidator<{ minSize: number }> {
   isValid(file: Express.Multer.File): boolean {
@@ -19,8 +20,7 @@ export class MaxFileSizeValidator extends FileValidator<{ maxSize: number }> {
   }
 
   buildErrorMessage(): string {
-    const max = this.validationOptions.maxSize / 1024 / 1024;
-    return `Размер файла не может привышать ${max}Мб`;
+    return UPLOAD_ERROR.TOO_BIG;
   }
 }
 

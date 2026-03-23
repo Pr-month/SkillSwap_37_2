@@ -1,21 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-
-// import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
+import { Skill } from '../skills/entities/skill.entity';
+import { Category } from '../categories/entities/category.entity';
 import { appConfig } from '../config/app.config';
-// import * as bcrypt from 'bcrypt';
-import { UsersService } from './users.service';
-import { User } from './entities/user.entity';
-import { Repository } from 'typeorm';
-import { UserRole, UserGender } from './users.enums';
+import * as bcrypt from 'bcrypt';
+// import { UserRole, UserGender } from './users.enums';
 
 describe('UsersService', () => {
   let service: UsersService;
-  let repository: Repository<User>;
 
-  const mockUser = {
+  /*const mockUser = {
     id: 1,
     name: 'Test User',
     email: 'test@example.com',
@@ -29,25 +26,28 @@ describe('UsersService', () => {
     refreshToken: null,
     skills: [],
     hashPassword: jest.fn(),
-  };
+  };*/
 
   const mockRepository = {
     create: jest.fn(),
     save: jest.fn(),
     find: jest.fn(),
     findOneBy: jest.fn(),
+    findAndCount: jest.fn(),
+    remove: jest.fn(),
+    update: jest.fn(),
+  };
+
+  const mockSkillRepository = {
+    findOneBy: jest.fn(),
+  };
+
+  const mockCategoryRepository = {
+    findByIds: jest.fn(),
   };
 
   const mockConfig = {
     hashSalt: 10,
-  };
-
-  const mockRepository = {
-    create: jest.fn(),
-    save: jest.fn(),
-    find: jest.fn(),
-    findOneBy: jest.fn(),
-    remove: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -61,6 +61,14 @@ describe('UsersService', () => {
         {
           provide: appConfig.KEY,
           useValue: mockConfig,
+        },
+        {
+          provide: getRepositoryToken(Skill),
+          useValue: mockSkillRepository,
+        },
+        {
+          provide: getRepositoryToken(Category),
+          useValue: mockCategoryRepository,
         },
       ],
     }).compile();
@@ -83,10 +91,10 @@ describe('UsersService', () => {
       };
       mockRepository.findOneBy.mockResolvedValue(user);
       mockRepository.save.mockResolvedValue(user);
-      jest.spyOn(bcrypt, 'compare').mockImplementation(async () => true);
-      jest.spyOn(bcrypt, 'hash').mockImplementation(async () => 'newHash');
+      (jest.spyOn(bcrypt, 'compare') as jest.Mock).mockResolvedValue(true);
+      (jest.spyOn(bcrypt, 'hash') as jest.Mock).mockResolvedValue('newHash');
 
-      const result = await service.changePassword(1, {
+      const result = await service.changePassword('1', {
         oldPassword: 'oldPass',
         newPassword: 'newPass123',
       });
@@ -108,10 +116,10 @@ describe('UsersService', () => {
         password: 'oldHash',
       };
       mockRepository.findOneBy.mockResolvedValue(user);
-      jest.spyOn(bcrypt, 'compare').mockImplementation(async () => false);
+      (jest.spyOn(bcrypt, 'compare') as jest.Mock).mockResolvedValue(false);
 
       await expect(
-        service.changePassword(1, {
+        service.changePassword('1', {
           oldPassword: 'wrongPass',
           newPassword: 'newPass123',
         }),
@@ -122,11 +130,103 @@ describe('UsersService', () => {
       mockRepository.findOneBy.mockResolvedValue(null);
 
       await expect(
-        service.changePassword(999, {
+        service.changePassword('999', {
           oldPassword: 'oldPass',
           newPassword: 'newPass123',
         }),
       ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('findOne', () => {
+    it('should return user when found', async () => {
+      const user = {
+        id: 1,
+        name: 'Test',
+        email: 'test@test.com',
+        password: 'oldHash',
+        role: 'USER',
+      };
+      mockRepository.findOneBy.mockResolvedValue(user);
+      const result = await service.findOne('1');
+
+      expect(mockRepository.findOneBy).toHaveBeenCalledWith({ id: '1' });
+      expect(result).toEqual({
+        id: 1,
+        name: 'Test',
+        email: 'test@test.com',
+        role: 'USER',
+      });
+    });
+
+    it('should return null when user not found', async () => {
+      mockRepository.findOneBy.mockResolvedValue(null);
+
+      const result = await service.findOne('999');
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('create', () => {
+    it('should create user', async () => {
+      const dto = {
+        name: 'Test',
+        email: 'test@test.com',
+        password: 'pass123',
+      };
+
+      const createdUser = {
+        id: 1,
+        ...dto,
+        role: 'USER',
+      };
+
+      mockRepository.create.mockReturnValue({});
+      mockRepository.save.mockResolvedValue(createdUser);
+
+      const result = await service.create(dto as any);
+
+      expect(mockRepository.create).toHaveBeenCalledWith();
+      expect(mockRepository.save).toHaveBeenCalled();
+      expect(result).toEqual({
+        id: 1,
+        name: 'Test',
+        email: 'test@test.com',
+        role: 'USER',
+      });
+    });
+  });
+
+  describe('remove', () => {
+    it('should remove user', async () => {
+      const user = {
+        id: 1,
+        name: 'Test',
+        email: 'test@test.com',
+        role: 'USER',
+      };
+
+      mockRepository.findOneBy.mockResolvedValue(user);
+      mockRepository.remove.mockResolvedValue(user);
+
+      const result = await service.remove('1');
+
+      expect(mockRepository.remove).toHaveBeenCalledWith(user);
+      expect(result).toEqual({
+        id: 1,
+        name: 'Test',
+        email: 'test@test.com',
+        role: 'USER',
+      });
+    });
+
+    it('should return null when user not found', async () => {
+      mockRepository.findOneBy.mockResolvedValue(null);
+
+      const result = await service.remove('999');
+
+      expect(result).toBeNull();
     });
   });
 });
