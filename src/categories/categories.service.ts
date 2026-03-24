@@ -37,24 +37,36 @@ export class CategoriesService {
       category.parent = parent;
     }
 
-    return await this.categoryRepository.save(category);
+    const saved = await this.categoryRepository.save(category);
+    // Загружаем полную категорию с отношениями
+    return this.categoryRepository.findOneOrFail({
+      where: { id: saved.id },
+      relations: ['parent', 'children'],
+    });
   }
 
   findAll() {
-    return this.categoryRepository.find({ where: { parent: IsNull() } });
+    return this.categoryRepository.find({
+      where: { parent: IsNull() },
+      relations: ['parent', 'children'],
+    });
   }
 
-  findOne(id: string) {
-    return this.categoryRepository.findOne({
+  async findOne(id: string) {
+    const category = await this.categoryRepository.findOne({
       where: { id },
-      relations: ['parent'],
+      relations: ['parent', 'children'],
     });
+    if (!category) {
+      throw new NotFoundException(`Категория с ID ${id} не найдена`);
+    }
+    return category;
   }
 
   async update(id: string, updateCategoryDto: UpdateCategoryDto) {
     const category = await this.categoryRepository.findOne({
       where: { id },
-      relations: ['parent'],
+      relations: ['parent', 'children'],
     });
 
     if (!category) {
@@ -95,7 +107,12 @@ export class CategoriesService {
       }
     }
 
-    return await this.categoryRepository.save(category);
+    const saved = await this.categoryRepository.save(category);
+    // Загружаем обновленную категорию с отношениями
+    return this.categoryRepository.findOneOrFail({
+      where: { id: saved.id },
+      relations: ['parent', 'children'],
+    });
   }
 
   async remove(id: string) {

@@ -120,7 +120,11 @@ export class UsersService {
     }
 
     const { wantToLearn, ...userData } = updateUserProfileDto;
-    Object.assign(user, userData);
+    // Удаляем поля со значением undefined, чтобы не перезаписывать существующие значения
+    const filteredUserData = Object.fromEntries(
+      Object.entries(userData).filter(([, value]) => value !== undefined),
+    );
+    Object.assign(user, filteredUserData);
 
     if (wantToLearn !== undefined) {
       if (wantToLearn.length === 0) {
