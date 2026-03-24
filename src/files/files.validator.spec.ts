@@ -55,7 +55,7 @@ describe('MaxFileSizeValidator', () => {
   it('should build correct error message', () => {
     const validator = new MaxFileSizeValidator({ maxSize: 2 * 1024 * 1024 });
     expect(validator.buildErrorMessage()).toBe(
-      'Размер файла не может привышать 2Мб',
+      'Размер файла не может превышать 2Мб',
     );
   });
 });

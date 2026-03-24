@@ -74,6 +74,7 @@ describe('SkillsService', () => {
       findOne: jest.fn(),
       findOneBy: jest.fn(),
       remove: jest.fn(),
+      delete: jest.fn(),
     } as unknown as jest.Mocked<Repository<Skill>>;
 
     const module: TestingModule = await Test.createTestingModule({
@@ -307,9 +308,25 @@ describe('SkillsService', () => {
   });
 
   describe('remove', () => {
-    it('should return a message', () => {
-      const result = service.remove('some-id');
-      expect(result).toBe('This action removes a #some-id skill');
+    it('should delete skill if found', async () => {
+      mockRepository.findOneBy.mockResolvedValue(mockSkill);
+      mockRepository.delete.mockResolvedValue({ affected: 1, raw: {} } as any);
+
+      const result = await service.remove(mockSkill.id);
+
+      expect(mockRepository.findOneBy).toHaveBeenCalledWith({
+        id: mockSkill.id,
+      });
+      expect(mockRepository.delete).toHaveBeenCalledWith(mockSkill.id);
+      expect(result).toEqual({ affected: 1, raw: {} });
+    });
+
+    it('should throw NotFoundException if skill not found', async () => {
+      mockRepository.findOneBy.mockResolvedValue(null);
+
+      await expect(service.remove('non-existent-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

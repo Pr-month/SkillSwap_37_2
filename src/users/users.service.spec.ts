@@ -9,6 +9,11 @@ import { appConfig } from '../config/app.config';
 import * as bcrypt from 'bcrypt';
 // import { UserRole, UserGender } from './users.enums';
 
+jest.mock('bcrypt', () => ({
+  compare: jest.fn(),
+  hash: jest.fn(),
+}));
+
 describe('UsersService', () => {
   let service: UsersService;
 
@@ -91,8 +96,8 @@ describe('UsersService', () => {
       };
       mockRepository.findOneBy.mockResolvedValue(user);
       mockRepository.save.mockResolvedValue(user);
-      (jest.spyOn(bcrypt, 'compare') as jest.Mock).mockResolvedValue(true);
-      (jest.spyOn(bcrypt, 'hash') as jest.Mock).mockResolvedValue('newHash');
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('newHash');
 
       const result = await service.changePassword('1', {
         oldPassword: 'oldPass',
@@ -116,7 +121,7 @@ describe('UsersService', () => {
         password: 'oldHash',
       };
       mockRepository.findOneBy.mockResolvedValue(user);
-      (jest.spyOn(bcrypt, 'compare') as jest.Mock).mockResolvedValue(false);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
       await expect(
         service.changePassword('1', {
