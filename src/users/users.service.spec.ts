@@ -7,6 +7,7 @@ import { Skill } from '../skills/entities/skill.entity';
 import { Category } from '../categories/entities/category.entity';
 import { appConfig } from '../config/app.config';
 import * as bcrypt from 'bcrypt';
+import { CreateUserDto } from './dto/create-user.dto';
 // import { UserRole, UserGender } from './users.enums';
 
 jest.mock('bcrypt', () => ({
@@ -93,6 +94,7 @@ describe('UsersService', () => {
         name: 'Test',
         email: 'test@test.com',
         password: 'oldHash',
+        role: 'USER',
       };
       mockRepository.findOneBy.mockResolvedValue(user);
       mockRepository.save.mockResolvedValue(user);
@@ -110,7 +112,12 @@ describe('UsersService', () => {
         mockConfig.hashSalt,
       );
       expect(mockRepository.save).toHaveBeenCalled();
-      expect(result).toEqual({ id: 1, name: 'Test', email: 'test@test.com' });
+      expect(result).toEqual({
+        id: 1,
+        name: 'Test',
+        email: 'test@test.com',
+        role: 'USER',
+      });
     });
 
     it('should throw BadRequestException when old password is wrong', async () => {
@@ -175,7 +182,7 @@ describe('UsersService', () => {
 
   describe('create', () => {
     it('should create user', async () => {
-      const dto = {
+      const dto: CreateUserDto = {
         name: 'Test',
         email: 'test@test.com',
         password: 'pass123',
@@ -190,7 +197,7 @@ describe('UsersService', () => {
       mockRepository.create.mockReturnValue({});
       mockRepository.save.mockResolvedValue(createdUser);
 
-      const result = await service.create(dto as any);
+      const result = await service.create(dto);
 
       expect(mockRepository.create).toHaveBeenCalledWith();
       expect(mockRepository.save).toHaveBeenCalled();
