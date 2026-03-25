@@ -6,6 +6,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import request from 'supertest';
 import { Test, TestingModule } from '@nestjs/testing';
+import * as http from 'http';
 import { AppModule } from '../src/app.module';
 import { AppExceptionFilter } from '../src/common/all-exception.filter';
 import { adminEmail, adminPassword } from 'src/scripts/seed-admin';
@@ -65,7 +66,9 @@ describe('UsersController (e2e)', () => {
 
     await app.init();
 
-    const userLoginResponse = await request(app.getHttpServer())
+    const userLoginResponse = await request(
+      app.getHttpServer() as unknown as http.Server,
+    )
       .post('/auth/login')
       .send({
         email: 'user1@test.com',
@@ -80,7 +83,9 @@ describe('UsersController (e2e)', () => {
     expect(userAccessToken).toBeDefined();
     expect(currentUserId).toBeDefined();
 
-    const adminLoginResponse = await request(app.getHttpServer())
+    const adminLoginResponse = await request(
+      app.getHttpServer() as unknown as http.Server,
+    )
       .post('/auth/login')
       .send({
         email: adminEmail,
@@ -99,7 +104,9 @@ describe('UsersController (e2e)', () => {
   });
   describe('GET /users', () => {
     it('should return paginated users list', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await request(
+        app.getHttpServer() as unknown as http.Server,
+      )
         .get('/users')
         .query({ page: 1, limit: 10 })
         .expect(200);
@@ -118,7 +125,7 @@ describe('UsersController (e2e)', () => {
     });
 
     it('should return 404 for non-existent page', async () => {
-      await request(app.getHttpServer())
+      await request(app.getHttpServer() as unknown as http.Server)
         .get('/users')
         .query({ page: 999, limit: 10 })
         .expect(404);
@@ -127,7 +134,9 @@ describe('UsersController (e2e)', () => {
 
   describe('GET /users/:id', () => {
     it('should return user by id', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await request(
+        app.getHttpServer() as unknown as http.Server,
+      )
         .get(`/users/${currentUserId}`)
         .expect(200);
 
@@ -138,13 +147,17 @@ describe('UsersController (e2e)', () => {
     });
 
     it('should return 400 for invalid uuid', async () => {
-      await request(app.getHttpServer()).get('/users/not-a-uuid').expect(400);
+      await request(app.getHttpServer() as unknown as http.Server)
+        .get('/users/not-a-uuid')
+        .expect(400);
     });
   });
 
   describe('GET /users/me', () => {
     it('should return current user for authorized request', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await request(
+        app.getHttpServer() as unknown as http.Server,
+      )
         .get('/users/me')
         .set('Authorization', `Bearer ${userAccessToken}`)
         .expect(200);
@@ -156,13 +169,15 @@ describe('UsersController (e2e)', () => {
     });
 
     it('should require authentication', async () => {
-      await request(app.getHttpServer()).get('/users/me').expect(401);
+      await request(app.getHttpServer() as unknown as http.Server)
+        .get('/users/me')
+        .expect(401);
     });
   });
 
   describe('PATCH /users/me/password', () => {
     it('should require authentication', async () => {
-      await request(app.getHttpServer())
+      await request(app.getHttpServer() as unknown as http.Server)
         .patch('/users/me/password')
         .send({
           oldPassword: 'password123',
@@ -174,7 +189,9 @@ describe('UsersController (e2e)', () => {
 
   describe('PATCH /users/:id', () => {
     it('should update user profile by id', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await request(
+        app.getHttpServer() as unknown as http.Server,
+      )
         .patch(`/users/${currentUserId}`)
         .send({
           name: 'Updated Test User',
@@ -189,7 +206,7 @@ describe('UsersController (e2e)', () => {
     });
 
     it('should return 400 for invalid uuid', async () => {
-      await request(app.getHttpServer())
+      await request(app.getHttpServer() as unknown as http.Server)
         .patch('/users/not-a-uuid')
         .send({
           name: 'Updated Name',
@@ -200,20 +217,20 @@ describe('UsersController (e2e)', () => {
 
   describe('DELETE /users/:id', () => {
     it('should require authentication', async () => {
-      await request(app.getHttpServer())
+      await request(app.getHttpServer() as unknown as http.Server)
         .delete(`/users/${currentUserId}`)
         .expect(401);
     });
 
     it('should forbid non-admin user', async () => {
-      await request(app.getHttpServer())
+      await request(app.getHttpServer() as unknown as http.Server)
         .delete(`/users/${currentUserId}`)
         .set('Authorization', `Bearer ${userAccessToken}`)
         .expect(403);
     });
 
     it('should return 400 for invalid uuid even for admin', async () => {
-      await request(app.getHttpServer())
+      await request(app.getHttpServer() as unknown as http.Server)
         .delete('/users/not-a-uuid')
         .set('Authorization', `Bearer ${adminAccessToken}`)
         .expect(400);
@@ -222,21 +239,23 @@ describe('UsersController (e2e)', () => {
 
   describe('GET /users/by-skill/:id', () => {
     it('should return 400 for invalid uuid', async () => {
-      await request(app.getHttpServer())
+      await request(app.getHttpServer() as unknown as http.Server)
         .get('/users/by-skill/not-a-uuid')
         .expect(400);
     });
 
     it('should return 404 for non-existent skill', async () => {
       const nonExistentSkillId = '00000000-0000-0000-0000-000000000000';
-      await request(app.getHttpServer())
+      await request(app.getHttpServer() as unknown as http.Server)
         .get(`/users/by-skill/${nonExistentSkillId}`)
         .expect(404);
     });
 
     it('should return users with given skill', async () => {
       // First, get a skill ID from the database via GET /skills
-      const skillsResponse = await request(app.getHttpServer())
+      const skillsResponse = await request(
+        app.getHttpServer() as unknown as http.Server,
+      )
         .get('/skills')
         .query({ limit: 1 })
         .expect(200);
@@ -244,7 +263,9 @@ describe('UsersController (e2e)', () => {
         .data[0]?.id;
       expect(skillId).toBeDefined();
 
-      const response = await request(app.getHttpServer())
+      const response = await request(
+        app.getHttpServer() as unknown as http.Server,
+      )
         .get(`/users/by-skill/${skillId}`)
         .expect(200);
 

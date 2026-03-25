@@ -6,6 +6,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import request from 'supertest';
 import { Test, TestingModule } from '@nestjs/testing';
+import * as http from 'http';
 import { AppModule } from '../src/app.module';
 import { AppExceptionFilter } from '../src/common/all-exception.filter';
 import { adminEmail, adminPassword } from 'src/scripts/seed-admin';
@@ -95,7 +96,9 @@ describe('RequestsController (e2e)', () => {
     await app.init();
 
     // Логин user1
-    const user1LoginResponse = await request(app.getHttpServer())
+    const user1LoginResponse = await request(
+      app.getHttpServer() as unknown as http.Server,
+    )
       .post('/auth/login')
       .send({
         email: 'user1@test.com',
@@ -108,7 +111,9 @@ describe('RequestsController (e2e)', () => {
     user1Id = (user1LoginResponse.body as LoginResponse).user.id;
 
     // Логин user2
-    const user2LoginResponse = await request(app.getHttpServer())
+    const user2LoginResponse = await request(
+      app.getHttpServer() as unknown as http.Server,
+    )
       .post('/auth/login')
       .send({
         email: 'user2@test.com',
@@ -121,7 +126,9 @@ describe('RequestsController (e2e)', () => {
     user2Id = (user2LoginResponse.body as LoginResponse).user.id;
 
     // Логин администратора
-    const adminLoginResponse = await request(app.getHttpServer())
+    const adminLoginResponse = await request(
+      app.getHttpServer() as unknown as http.Server,
+    )
       .post('/auth/login')
       .send({
         email: adminEmail,
@@ -133,7 +140,9 @@ describe('RequestsController (e2e)', () => {
       .accessToken;
 
     // Получаем ID навыков, принадлежащих user1 и user2
-    const skillsResponse = await request(app.getHttpServer())
+    const skillsResponse = await request(
+      app.getHttpServer() as unknown as http.Server,
+    )
       .get('/skills')
       .query({ limit: 10 })
       .expect(200);
@@ -157,7 +166,9 @@ describe('RequestsController (e2e)', () => {
 
   describe('POST /requests', () => {
     it('should create a request', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await request(
+        app.getHttpServer() as unknown as http.Server,
+      )
         .post('/requests')
         .set('Authorization', `Bearer ${user1AccessToken}`)
         .send({
@@ -180,7 +191,7 @@ describe('RequestsController (e2e)', () => {
     });
 
     it('should fail with same skill owner', async () => {
-      await request(app.getHttpServer())
+      await request(app.getHttpServer() as unknown as http.Server)
         .post('/requests')
         .set('Authorization', `Bearer ${user1AccessToken}`)
         .send({
@@ -191,7 +202,7 @@ describe('RequestsController (e2e)', () => {
     });
 
     it('should fail without authentication', async () => {
-      await request(app.getHttpServer())
+      await request(app.getHttpServer() as unknown as http.Server)
         .post('/requests')
         .send({
           offeredSkillId: skill1Id,
@@ -201,7 +212,7 @@ describe('RequestsController (e2e)', () => {
     });
 
     it('should fail with invalid skill id', async () => {
-      await request(app.getHttpServer())
+      await request(app.getHttpServer() as unknown as http.Server)
         .post('/requests')
         .set('Authorization', `Bearer ${user1AccessToken}`)
         .send({
@@ -214,7 +225,9 @@ describe('RequestsController (e2e)', () => {
 
   describe('GET /requests/incoming', () => {
     it('should return incoming requests', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await request(
+        app.getHttpServer() as unknown as http.Server,
+      )
         .get('/requests/incoming')
         .set('Authorization', `Bearer ${user2AccessToken}`)
         .expect(200);
@@ -233,13 +246,17 @@ describe('RequestsController (e2e)', () => {
     });
 
     it('should require authentication', async () => {
-      await request(app.getHttpServer()).get('/requests/incoming').expect(401);
+      await request(app.getHttpServer() as unknown as http.Server)
+        .get('/requests/incoming')
+        .expect(401);
     });
   });
 
   describe('GET /requests/outgoing', () => {
     it('should return outgoing requests', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await request(
+        app.getHttpServer() as unknown as http.Server,
+      )
         .get('/requests/outgoing')
         .set('Authorization', `Bearer ${user1AccessToken}`)
         .expect(200);
@@ -256,7 +273,9 @@ describe('RequestsController (e2e)', () => {
     });
 
     it('should require authentication', async () => {
-      await request(app.getHttpServer()).get('/requests/outgoing').expect(401);
+      await request(app.getHttpServer() as unknown as http.Server)
+        .get('/requests/outgoing')
+        .expect(401);
     });
   });
 
@@ -265,7 +284,9 @@ describe('RequestsController (e2e)', () => {
 
     beforeAll(async () => {
       // Пытаемся создать запрос; если уже существует, берем существующий
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await request(
+        app.getHttpServer() as unknown as http.Server,
+      )
         .post('/requests')
         .set('Authorization', `Bearer ${user1AccessToken}`)
         .send({
@@ -276,7 +297,9 @@ describe('RequestsController (e2e)', () => {
         requestId = (createResponse.body as RequestResponse).id;
       } else {
         // Если запрос уже существует, получим ID из списка исходящих запросов
-        const outgoingResponse = await request(app.getHttpServer())
+        const outgoingResponse = await request(
+          app.getHttpServer() as unknown as http.Server,
+        )
           .get('/requests/outgoing')
           .set('Authorization', `Bearer ${user1AccessToken}`)
           .expect(200);
@@ -294,7 +317,9 @@ describe('RequestsController (e2e)', () => {
     });
 
     it('should update request status (receiver)', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await request(
+        app.getHttpServer() as unknown as http.Server,
+      )
         .patch(`/requests/${requestId}`)
         .set('Authorization', `Bearer ${user2AccessToken}`)
         .send({
@@ -306,7 +331,7 @@ describe('RequestsController (e2e)', () => {
     });
 
     it('should fail if sender tries to update', async () => {
-      await request(app.getHttpServer())
+      await request(app.getHttpServer() as unknown as http.Server)
         .patch(`/requests/${requestId}`)
         .set('Authorization', `Bearer ${user1AccessToken}`)
         .send({
@@ -316,7 +341,7 @@ describe('RequestsController (e2e)', () => {
     });
 
     it('should fail with invalid status', async () => {
-      await request(app.getHttpServer())
+      await request(app.getHttpServer() as unknown as http.Server)
         .patch(`/requests/${requestId}`)
         .set('Authorization', `Bearer ${user2AccessToken}`)
         .send({
@@ -326,7 +351,7 @@ describe('RequestsController (e2e)', () => {
     });
 
     it('should fail without authentication', async () => {
-      await request(app.getHttpServer())
+      await request(app.getHttpServer() as unknown as http.Server)
         .patch(`/requests/${requestId}`)
         .send({
           status: RequestStatus.ACCEPTED,
@@ -340,7 +365,9 @@ describe('RequestsController (e2e)', () => {
 
     beforeEach(async () => {
       // Удаляем существующий запрос между этими навыками, если есть
-      const outgoingResponse = await request(app.getHttpServer())
+      const outgoingResponse = await request(
+        app.getHttpServer() as unknown as http.Server,
+      )
         .get('/requests/outgoing')
         .set('Authorization', `Bearer ${user1AccessToken}`)
         .expect(200);
@@ -351,13 +378,15 @@ describe('RequestsController (e2e)', () => {
           req.requestedSkill.id === skill2Id,
       );
       if (existing) {
-        await request(app.getHttpServer())
+        await request(app.getHttpServer() as unknown as http.Server)
           .delete(`/requests/${existing.id}`)
           .set('Authorization', `Bearer ${user1AccessToken}`)
           .expect(200);
       }
       // Создаем новый запрос для удаления
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await request(
+        app.getHttpServer() as unknown as http.Server,
+      )
         .post('/requests')
         .set('Authorization', `Bearer ${user1AccessToken}`)
         .send({
@@ -369,7 +398,7 @@ describe('RequestsController (e2e)', () => {
     });
 
     it('should delete request (sender)', async () => {
-      await request(app.getHttpServer())
+      await request(app.getHttpServer() as unknown as http.Server)
         .delete(`/requests/${requestId}`)
         .set('Authorization', `Bearer ${user1AccessToken}`)
         .expect(200);
@@ -377,21 +406,21 @@ describe('RequestsController (e2e)', () => {
 
     it('should delete request (admin)', async () => {
       // используем существующий запрос, созданный в beforeEach
-      await request(app.getHttpServer())
+      await request(app.getHttpServer() as unknown as http.Server)
         .delete(`/requests/${requestId}`)
         .set('Authorization', `Bearer ${adminAccessToken}`)
         .expect(200);
     });
 
     it('should fail if receiver tries to delete', async () => {
-      await request(app.getHttpServer())
+      await request(app.getHttpServer() as unknown as http.Server)
         .delete(`/requests/${requestId}`)
         .set('Authorization', `Bearer ${user2AccessToken}`)
         .expect(403);
     });
 
     it('should fail without authentication', async () => {
-      await request(app.getHttpServer())
+      await request(app.getHttpServer() as unknown as http.Server)
         .delete(`/requests/${requestId}`)
         .expect(401);
     });
