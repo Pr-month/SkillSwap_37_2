@@ -98,7 +98,10 @@ export class RequestsService {
   }
 
   async update(userId: string, id: string, updateRequestDto: UpdateRequestDto) {
-    const request = await this.requestRepository.findOne({ where: { id: id } });
+    const request = await this.requestRepository.findOne({
+      where: { id: id },
+      relations: ['receiver', 'sender'],
+    });
 
     if (!request) {
       throw new NotFoundException('Заявка не найдена');
@@ -120,7 +123,7 @@ export class RequestsService {
       request.isRead = true;
     }
 
-    const response = await this.requestRepository.save(request);
+    const saved = await this.requestRepository.save(request);
 
     this.notificationsService.notifyUserRequestStatus(
       userId,
@@ -128,12 +131,13 @@ export class RequestsService {
       updateRequestDto.status,
     );
 
-    return await this.requestRepository.save(request);
+    return saved;
   }
 
   async delete(user: JwtPayload, deletedId: string) {
     const request = await this.requestRepository.findOne({
       where: { id: deletedId },
+      relations: ['sender'],
     });
 
     if (!request) {
