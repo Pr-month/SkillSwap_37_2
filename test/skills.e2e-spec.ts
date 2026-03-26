@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import request from 'supertest';
+import * as http from 'http';
 import { AppModule } from '../src/app.module';
 import { AppExceptionFilter } from '../src/common/all-exception.filter';
 
@@ -61,7 +62,9 @@ describe('SkillsController (e2e)', () => {
     await app.init();
 
     // Логин для получения токена (используем данные из сидинга)
-    const loginResponse = await request(app.getHttpServer())
+    const loginResponse = await request(
+      app.getHttpServer() as unknown as http.Server,
+    )
       .post('/auth/login')
       .send({
         email: 'user1@test.com',
@@ -79,7 +82,9 @@ describe('SkillsController (e2e)', () => {
 
   describe('GET /skills', () => {
     it('should return paginated skills', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await request(
+        app.getHttpServer() as unknown as http.Server,
+      )
         .get('/skills')
         .query({ page: 1, limit: 10 })
         .expect(200);
@@ -93,7 +98,9 @@ describe('SkillsController (e2e)', () => {
     });
 
     it('should apply search filter', async () => {
-      const response = await request(app.getHttpServer())
+      const response = await request(
+        app.getHttpServer() as unknown as http.Server,
+      )
         .get('/skills')
         .query({ search: 'javascript' })
         .expect(200);
@@ -104,7 +111,9 @@ describe('SkillsController (e2e)', () => {
 
     it('should return 404 for non-existent page', async () => {
       // Предположим, что totalPages маленькое, а page большое
-      const response = await request(app.getHttpServer())
+      const response = await request(
+        app.getHttpServer() as unknown as http.Server,
+      )
         .get('/skills')
         .query({ page: 999, limit: 10 })
         .expect(404);
@@ -118,7 +127,9 @@ describe('SkillsController (e2e)', () => {
   describe('GET /skills/:id', () => {
     it('should return a skill by id', async () => {
       // Сначала получим список, чтобы взять существующий ID
-      const listResponse = await request(app.getHttpServer())
+      const listResponse = await request(
+        app.getHttpServer() as unknown as http.Server,
+      )
         .get('/skills')
         .query({ limit: 1 })
         .expect(200);
@@ -126,7 +137,9 @@ describe('SkillsController (e2e)', () => {
       if ((listResponse.body as PaginatedSkillsResponse).data.length > 0) {
         const skillId = (listResponse.body as PaginatedSkillsResponse).data[0]
           .id;
-        const response = await request(app.getHttpServer())
+        const response = await request(
+          app.getHttpServer() as unknown as http.Server,
+        )
           .get(`/skills/${skillId}`)
           .expect(200);
 
@@ -141,7 +154,7 @@ describe('SkillsController (e2e)', () => {
 
     it('should return 404 for non-existent id', async () => {
       const nonExistentId = '00000000-0000-0000-0000-000000000000';
-      await request(app.getHttpServer())
+      await request(app.getHttpServer() as unknown as http.Server)
         .get(`/skills/${nonExistentId}`)
         .expect(404);
     });
@@ -149,7 +162,9 @@ describe('SkillsController (e2e)', () => {
 
   describe('Endpoints that require authentication', () => {
     it('PATCH /skills/:id should require authentication', async () => {
-      const listResponse = await request(app.getHttpServer())
+      const listResponse = await request(
+        app.getHttpServer() as unknown as http.Server,
+      )
         .get('/skills')
         .query({ limit: 1 })
         .expect(200);
@@ -157,7 +172,7 @@ describe('SkillsController (e2e)', () => {
       if ((listResponse.body as PaginatedSkillsResponse).data.length > 0) {
         const skillId = (listResponse.body as PaginatedSkillsResponse).data[0]
           .id;
-        await request(app.getHttpServer())
+        await request(app.getHttpServer() as unknown as http.Server)
           .patch(`/skills/${skillId}`)
           .send({ title: 'Updated Title' })
           .expect(401);
