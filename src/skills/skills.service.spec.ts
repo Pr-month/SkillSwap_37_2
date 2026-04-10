@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, SelectQueryBuilder, DeleteResult } from 'typeorm';
 import { SkillsService } from './skills.service';
 import { Skill } from './entities/skill.entity';
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
@@ -74,6 +74,7 @@ describe('SkillsService', () => {
       findOne: jest.fn(),
       findOneBy: jest.fn(),
       remove: jest.fn(),
+      delete: jest.fn(),
     } as unknown as jest.Mocked<Repository<Skill>>;
 
     const module: TestingModule = await Test.createTestingModule({
@@ -142,7 +143,7 @@ describe('SkillsService', () => {
         getMany: jest.fn().mockResolvedValue(mockSkills),
       };
       mockRepository.createQueryBuilder.mockReturnValue(
-        mockQueryBuilder as any,
+        mockQueryBuilder as unknown as SelectQueryBuilder<Skill>,
       );
 
       const result = await service.findAll(query);
@@ -176,7 +177,7 @@ describe('SkillsService', () => {
         getMany: jest.fn().mockResolvedValue(mockSkills),
       };
       mockRepository.createQueryBuilder.mockReturnValue(
-        mockQueryBuilder as any,
+        mockQueryBuilder as unknown as SelectQueryBuilder<Skill>,
       );
 
       await service.findAll(query);
@@ -200,7 +201,7 @@ describe('SkillsService', () => {
         getMany: jest.fn(),
       };
       mockRepository.createQueryBuilder.mockReturnValue(
-        mockQueryBuilder as any,
+        mockQueryBuilder as unknown as SelectQueryBuilder<Skill>,
       );
 
       await expect(service.findAll(query)).rejects.toThrow(NotFoundException);
@@ -251,7 +252,9 @@ describe('SkillsService', () => {
         ...mockSkill,
         owner: { ...mockOwner, id: 'other-id', email: 'other@example.com' },
       };
-      mockRepository.findOne.mockResolvedValue(differentOwnerSkill as Skill);
+      mockRepository.findOne.mockResolvedValue(
+        differentOwnerSkill as unknown as Skill,
+      );
 
       await expect(
         service.findOneAndCheckOwner(mockSkill.id, mockUser),
@@ -268,8 +271,10 @@ describe('SkillsService', () => {
       };
       const updatedSkill = { ...skillWithOwner, ...updateSkillDto };
 
-      mockRepository.findOne.mockResolvedValue(skillWithOwner as Skill);
-      mockRepository.save.mockResolvedValue(updatedSkill as Skill);
+      mockRepository.findOne.mockResolvedValue(
+        skillWithOwner as unknown as Skill,
+      );
+      mockRepository.save.mockResolvedValue(updatedSkill as unknown as Skill);
 
       const result = await service.update(
         mockSkill.id,
@@ -298,7 +303,9 @@ describe('SkillsService', () => {
         ...mockSkill,
         owner: { ...mockOwner, id: 'other-id' },
       };
-      mockRepository.findOne.mockResolvedValue(skillWithOtherOwner as Skill);
+      mockRepository.findOne.mockResolvedValue(
+        skillWithOtherOwner as unknown as Skill,
+      );
 
       await expect(service.update(mockSkill.id, {}, 'user-id')).rejects.toThrow(
         ForbiddenException,
@@ -307,9 +314,28 @@ describe('SkillsService', () => {
   });
 
   describe('remove', () => {
-    it('should return a message', () => {
-      const result = service.remove('some-id');
-      expect(result).toBe('This action removes a #some-id skill');
+    it('should delete skill if found', async () => {
+      mockRepository.findOneBy.mockResolvedValue(mockSkill);
+      mockRepository.delete.mockResolvedValue({
+        affected: 1,
+        raw: {},
+      } as unknown as DeleteResult);
+
+      const result = await service.remove(mockSkill.id);
+
+      expect(mockRepository.findOneBy).toHaveBeenCalledWith({
+        id: mockSkill.id,
+      });
+      expect(mockRepository.delete).toHaveBeenCalledWith(mockSkill.id);
+      expect(result).toEqual({ affected: 1, raw: {} });
+    });
+
+    it('should throw NotFoundException if skill not found', async () => {
+      mockRepository.findOneBy.mockResolvedValue(null);
+
+      await expect(service.remove('non-existent-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

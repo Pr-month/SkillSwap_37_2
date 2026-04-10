@@ -7,6 +7,11 @@ import { jwtConfig } from '../config/jwt.config';
 import { UnauthorizedException } from '@nestjs/common';
 import { UserGender, UserRole } from '../users/users.enums';
 
+jest.mock('bcrypt', () => ({
+  compare: jest.fn(),
+  hash: jest.fn(),
+}));
+
 describe('AuthService', () => {
   let service: AuthService;
   let usersService: {
@@ -82,12 +87,8 @@ describe('AuthService', () => {
       usersService.findByEmail.mockResolvedValue(user);
       usersService.updateRefreshToken.mockResolvedValue(undefined);
 
-      jest
-        .spyOn(bcrypt, 'compare')
-        .mockImplementation(() => Promise.resolve(true));
-      jest
-        .spyOn(bcrypt, 'hash')
-        .mockImplementation(() => Promise.resolve('hashed-refresh-token'));
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-refresh-token');
 
       jwtService.signAsync
         .mockResolvedValueOnce('access-token')
@@ -137,9 +138,7 @@ describe('AuthService', () => {
         role: 'USER',
       });
 
-      jest
-        .spyOn(bcrypt, 'compare')
-        .mockImplementation(() => Promise.resolve(false));
+      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
       await expect(
         service.login({
@@ -161,10 +160,9 @@ describe('AuthService', () => {
       });
       usersService.updateRefreshToken.mockResolvedValue(undefined);
 
-      jest
-        .spyOn(bcrypt, 'hash')
-        .mockImplementationOnce(() => Promise.resolve('hashed-password'))
-        .mockImplementationOnce(() => Promise.resolve('hashed-refresh-token'));
+      (bcrypt.hash as jest.Mock)
+        .mockResolvedValueOnce('hashed-password')
+        .mockResolvedValueOnce('hashed-refresh-token');
 
       jwtService.signAsync
         .mockResolvedValueOnce('access-token')
@@ -215,9 +213,7 @@ describe('AuthService', () => {
         .mockResolvedValueOnce('access-token')
         .mockResolvedValueOnce('refresh-token');
 
-      jest
-        .spyOn(bcrypt, 'hash')
-        .mockImplementationOnce(() => Promise.resolve('hashed-refresh-token'));
+      (bcrypt.hash as jest.Mock).mockResolvedValueOnce('hashed-refresh-token');
 
       const result = await service.refresh({
         id: '1',
